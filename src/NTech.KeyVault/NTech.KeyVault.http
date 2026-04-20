@@ -1,6 +1,0 @@
-@NTech.KeyVault_HostAddress = http://localhost:5000
-
-GET {{NTech.KeyVault_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,4 +1,4 @@
-namespace NTech.KeyVault
+namespace NTech.KeyVault.Api
 {
     public class WeatherForecast
     {

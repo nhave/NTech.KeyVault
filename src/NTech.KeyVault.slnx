@@ -1,3 +1,5 @@
 <Solution>
-  <Project Path="NTech.KeyVault/NTech.KeyVault.csproj" />
+  <Project Path="NTech.KeyVault.Api/NTech.KeyVault.Api.csproj" />
+  <Project Path="NTech.KeyVault.AppHost/NTech.KeyVault.AppHost.csproj" Id="450f7867-764b-46d1-85ba-ffb54abceab8" />
+  <Project Path="NTech.KeyVault.ServiceDefaults/NTech.KeyVault.ServiceDefaults.csproj" />
 </Solution>

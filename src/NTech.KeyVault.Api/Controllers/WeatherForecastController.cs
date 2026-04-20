@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace NTech.KeyVault.Controllers
+namespace NTech.KeyVault.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
