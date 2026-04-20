@@ -10,11 +10,11 @@
         /// <summary>
         /// The date and time when the entity was created. This property is used to track when a record was initially created in the database. It is typically set to the current date and time when a new record is inserted into the database, allowing for auditing and historical tracking of data changes.
         /// </summary>
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// The date and time when the entity was last updated. This property is used to track when a record was last modified in the database. It is typically updated to the current date and time whenever the record is updated, allowing for auditing and historical tracking of data changes.
         /// </summary>
-        public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }
 }

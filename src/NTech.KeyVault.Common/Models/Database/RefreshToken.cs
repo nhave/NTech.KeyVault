@@ -3,7 +3,7 @@
     public class RefreshToken : Common
     {
         // Relation
-        public required string UserId { get; set; }
+        public required Guid UserId { get; set; }
         public required User User { get; set; }
 
         // Hashed token (SHA-256 + pepper)

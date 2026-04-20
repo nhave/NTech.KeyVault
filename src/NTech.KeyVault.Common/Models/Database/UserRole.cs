@@ -7,7 +7,7 @@ namespace NTech.KeyVault.Common.Models.Database
         /// <summary>
         /// Foreign key to the User table, indicating which user this role is associated with.
         /// </summary>
-        public required string UserId { get; set; }
+        public required Guid UserId { get; set; }
 
         /// <summary>
         /// Gets or sets the role assigned to the user.
