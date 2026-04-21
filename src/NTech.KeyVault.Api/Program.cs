@@ -108,8 +108,8 @@ namespace NTech.KeyVault.Api
             app.UseHttpsRedirection();
 
             app.UseAntiforgery();
-            app.UseAuthorization();
             app.UseAuthentication();
+            app.UseAuthorization();
 
             app.MapControllers();
 
