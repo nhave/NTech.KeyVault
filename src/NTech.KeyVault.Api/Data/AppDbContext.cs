@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NTech.KeyVault.Common.Enums;
 using NTech.KeyVault.Common.Models.Database;
+using System.Text.Json;
 
 namespace NTech.KeyVault.Api.Data
 {
@@ -9,6 +11,11 @@ namespace NTech.KeyVault.Api.Data
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<UserRole> UserRoles { get; set; }
         public DbSet<UserMfaMethod> UserMfaMethods { get; set; }
+
+        public DbSet<Application> Applications { get; set; }
+
+        // DbSet for the PrincipalPermission entity to manage permissions for users and teams
+        //public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -78,6 +85,37 @@ namespace NTech.KeyVault.Api.Data
             modelBuilder.Entity<UserMfaMethod>()
                 .Property(mfa => mfa.Method)
                 .HasConversion<string>();
+
+            // Configure relationships for the Application entity
+            modelBuilder.Entity<Application>()
+                .HasOne(a => a.OwnerUser)
+                .WithMany()
+                .HasForeignKey(a => a.OwnerUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            //// Configure the PrincipalPermission entity
+            //// Configure the conversion for the PrincipalType enum to string
+            //modelBuilder.Entity<PrincipalPermission>()
+            //    .Property(p => p.PrincipalType)
+            //    .HasConversion<string>();
+
+            //// Configure the conversion for the ResourceType enum to string
+            //modelBuilder.Entity<PrincipalPermission>()
+            //    .Property(p => p.ResourceType)
+            //    .HasConversion<string>();
+
+            //// Configure the conversion for the Permissions list to a JSON string
+            //modelBuilder.Entity<PrincipalPermission>()
+            //    .Property(p => p.Permissions)
+            //    .HasConversion(
+            //        v => JsonSerializer.Serialize(
+            //            v.Select(p => p.ToString().Replace("_", ":")).ToList(),
+            //            (JsonSerializerOptions)null!
+            //        ),
+            //        v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null!)!
+            //            .Select(s => Enum.Parse<Permission>(s.Replace(":", "_")))
+            //            .ToList()
+            //    );
         }
     }
 }
