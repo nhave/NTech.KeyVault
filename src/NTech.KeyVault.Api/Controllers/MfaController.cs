@@ -8,8 +8,15 @@ namespace NTech.KeyVault.Api.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class MfaController(IAuthService authService, IMfaService mfaService) : ControllerBase
+    public class MfaController(IMfaService mfaService) : ControllerBase
     {
+        /// <summary>
+        /// Enables multi-factor authentication (MFA) for a user account based on the provided request data.
+        /// </summary>
+        /// <param name="dto">An object containing the information required to enable MFA for the user. Cannot be null.</param>
+        /// <returns>An ActionResult containing the result of the MFA enablement operation. Returns a successful response with
+        /// details if MFA is enabled, a bad request if the input is invalid, or a 500 status code for unexpected
+        /// errors.</returns>
         [HttpPost("EnableMFA"), Authorize]
         public async Task<ActionResult<EnableMfaResponse>> EnableMfaAsync(EnableMfaRequest dto)
         {
@@ -28,6 +35,14 @@ namespace NTech.KeyVault.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Generates a QR code image for configuring Time-based One-Time Password (TOTP) multi-factor authentication
+        /// for the current user.
+        /// </summary>
+        /// <remarks>The generated QR code can be scanned by authenticator applications to set up
+        /// TOTP-based multi-factor authentication. The response is not cached to ensure security.</remarks>
+        /// <returns>An image file containing the QR code in PNG format if successful; otherwise, an appropriate error response
+        /// such as Unauthorized, BadRequest, or Internal Server Error.</returns>
         [HttpGet("GenerateQRCode"), Authorize]
         public async Task<ActionResult> GenerateQRCode()
         {
@@ -54,6 +69,15 @@ namespace NTech.KeyVault.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Verifies a time-based one-time password (TOTP) code as part of multi-factor authentication (MFA) setup.
+        /// </summary>
+        /// <remarks>This endpoint is typically used during the MFA enrollment process to confirm that the
+        /// user can generate valid TOTP codes. The response indicates whether the provided code is valid and may
+        /// include additional information relevant to the MFA setup process.</remarks>
+        /// <param name="dto">The request containing the TOTP code and related information required for verification.</param>
+        /// <returns>An HTTP response containing the result of the TOTP verification. Returns a 200 OK response with verification
+        /// details if successful; otherwise, returns an appropriate error response.</returns>
         [HttpPost("VerifyTotp"), Authorize]
         public async Task<ActionResult<VerifyTotpResponse>> VerifyTotp(VerifyTotpRequest dto)
         {
@@ -80,6 +104,14 @@ namespace NTech.KeyVault.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Disables multi-factor authentication (MFA) for the specified user account.
+        /// </summary>
+        /// <param name="dto">An object containing the information required to identify the user and process the MFA disable request.
+        /// Cannot be null.</param>
+        /// <returns>An HTTP response indicating the result of the operation. Returns 204 No Content if successful, 401
+        /// Unauthorized if the user is not authorized, 400 Bad Request for invalid input or operation, or 500 Internal
+        /// Server Error for unexpected failures.</returns>
         [HttpPost("DisableMfa"), Authorize]
         public async Task<ActionResult> DisableMfa(DisableMfaRequest dto)
         {

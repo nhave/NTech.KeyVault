@@ -11,6 +11,13 @@ namespace NTech.KeyVault.Api.Controllers
     [Route("[controller]"), Authorize]
     public class ApplicationController(IApplicationService applicationService) : ControllerBase
     {
+        /// <summary>
+        /// Creates a new application using the specified request data.
+        /// </summary>
+        /// <param name="dto">The request object containing the details required to create the application. Cannot be null.</param>
+        /// <returns>An ActionResult containing the newly created and decrypted application if successful; a BadRequest result
+        /// with an error message if the request data is invalid; or a 500 Internal Server Error result if an unexpected
+        /// error occurs.</returns>
         [HttpPost("Create")]
         public async Task<ActionResult<DecryptedApplication>> CreateApplication(CreateApplicationRequest dto)
         {
@@ -29,6 +36,11 @@ namespace NTech.KeyVault.Api.Controllers
             }
         }
 
+        /// <summary>
+        /// Retrieves a list of applications that the current user is authorized to access.
+        /// </summary>
+        /// <returns>An <see cref="ActionResult{T}"/> containing a list of <see cref="ApplicationResponse"/> objects representing
+        /// the accessible applications. Returns a 500 status code if an error occurs.</returns>
         [HttpGet("List")]
         public async Task<ActionResult<List<ApplicationResponse>>> GetAccessibleApplications()
         {
