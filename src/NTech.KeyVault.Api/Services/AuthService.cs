@@ -24,6 +24,9 @@ namespace NTech.KeyVault.Api.Services
             if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
                 throw new ArgumentException("Invalid email or password.");
 
+            if (user.IsDisabled)
+                throw new ArgumentException("User account is disabled.");
+
             var userInfo = userService.GetUserInfo(user);
             if (userInfo == null)
                 throw new Exception("Failed to fetch User information.");
@@ -41,6 +44,9 @@ namespace NTech.KeyVault.Api.Services
 
             var user = await jwtService.ValidateRefreshTokenAsync(dto.RefreshToken, ip);
             if (user == null) throw new ArgumentException("Invalid or expired refresh token.");
+
+            if (user.IsDisabled)
+                throw new ArgumentException("User account is disabled.");
 
             var userInfo = userService.GetUserInfo(user);
             if (userInfo == null)
@@ -98,7 +104,7 @@ namespace NTech.KeyVault.Api.Services
                 user.Id.ToString(),
                 userInfo.FullName,
                 userInfo.Email,
-                user.UserRoles.Select(ur => ur.Role.ToString()).ToList());
+                user.Roles.Select(r => r.ToString()).ToList());
         }
 
         private string GetIpAddress()

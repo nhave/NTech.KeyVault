@@ -19,6 +19,6 @@ namespace NTech.KeyVault.Common.Models.Database
         /// <summary>
         /// Navigation property to the User entity, allowing access to the user's details from this role assignment.
         /// </summary>
-        public required User User { get; set; }
+        public User User { get; set; } = default!;
     }
 }

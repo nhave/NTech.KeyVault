@@ -1,4 +1,7 @@
-﻿namespace NTech.KeyVault.Common.Models.Database
+﻿using NTech.KeyVault.Common.Enums;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace NTech.KeyVault.Common.Models.Database
 {
     public class User : Common
     {
@@ -72,6 +75,11 @@
         /// purposes.</remarks>
         public string UserAgent { get; set; } = string.Empty;
 
+        /// <summary>
+        /// Gets or sets a value indicating whether the component is disabled.
+        /// </summary>
+        public bool IsDisabled { get; set; } = false;
+
         // Relations
 
         /// <summary>
@@ -83,5 +91,13 @@
         /// Gets or sets the collection of multi-factor authentication (MFA) methods associated with the user.
         /// </summary>
         public List<UserMfaMethod> MfaMethods { get; set; } = new List<UserMfaMethod>();
+
+        /// <summary>
+        /// Gets the list of roles assigned to the user, including any expanded or inherited roles.
+        /// </summary>
+        /// <remarks>The returned list includes all roles directly assigned to the user as well as any
+        /// roles that are expanded through role inheritance or grouping. The list is read-only and reflects the current
+        /// state of the user's role assignments.</remarks>
+        public List<Roles> Roles => UserRoles.Select(ur => ur.Role).ExpandRoles();
     }
 }

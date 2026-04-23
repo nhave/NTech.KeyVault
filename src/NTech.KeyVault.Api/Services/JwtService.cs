@@ -38,9 +38,9 @@ namespace NTech.KeyVault.Api.Services
                 new Claim("Email", userInfo.Email)
             };
 
-            foreach (var userRole in user.UserRoles)
+            foreach (var role in user.Roles)
             {
-                Claims.Add(new Claim(ClaimTypes.Role, userRole.Role.ToString()));
+                Claims.Add(new Claim(ClaimTypes.Role, role.ToString()));
             }
 
             var token = new JwtSecurityToken(
