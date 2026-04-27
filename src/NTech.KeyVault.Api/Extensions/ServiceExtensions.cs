@@ -11,6 +11,8 @@ namespace NTech.KeyVault.Api.Extensions
             services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
             services.AddScoped<IMfaRepository, MfaRepository>();
             services.AddScoped<IApplicationRepository, ApplicationRepository>();
+
+            services.AddScoped<IPrincipalPermissionRepository, PrincipalPermissionRepository>();
         }
 
         public static void AddApiServices(this IServiceCollection services)
@@ -23,6 +25,8 @@ namespace NTech.KeyVault.Api.Extensions
             services.AddScoped<IUserService, UserService>();
             services.AddScoped<IEncryptionService, EncryptionService>();
             services.AddScoped<IApplicationService, ApplicationService>();
+
+            services.AddScoped<IPermissionService, PermissionService>();
         }
     }
 }

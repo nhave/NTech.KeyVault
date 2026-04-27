@@ -10,7 +10,8 @@ namespace NTech.KeyVault.Api.Repositories
     public interface IApplicationRepository
     {
         public Task<DecryptedApplication> CreateApplicationAsync(Guid? userId, string applicationName, string? description = null);
-        public Task<Application?> GetApplicationById(Guid applicationId);
+        public Task<Application?> GetApplicationByIdAsync(Guid applicationId);
+        public Task<List<Application>> GetApplicationsByIdsAsync(IEnumerable<Guid> applicationIds);
         public Task<List<Application>> GetApplicationsByUserId(Guid userId);
         public Task<List<Application>> GetAllApplicationsAsync();
         public Task UpdateApplicationAsync(Application application);
@@ -52,11 +53,19 @@ namespace NTech.KeyVault.Api.Repositories
             };
         }
 
-        public async Task<Application?> GetApplicationById(Guid applicationId)
+        public async Task<Application?> GetApplicationByIdAsync(Guid applicationId)
         {
             return await dbContext.Applications
                 .Include(a => a.OwnerUser)
                 .FirstOrDefaultAsync(a => a.Id == applicationId);
+        }
+
+        public async Task<List<Application>> GetApplicationsByIdsAsync(IEnumerable<Guid> applicationIds)
+        {
+            return await dbContext.Applications
+                .Include(a => a.OwnerUser)
+                .Where(a => applicationIds.Contains(a.Id))
+                .ToListAsync();
         }
 
         public async Task<List<Application>> GetApplicationsByUserId(Guid userId)

@@ -7,30 +7,101 @@ namespace NTech.KeyVault.Api.Repositories
 {
     public interface IPrincipalPermissionRepository
     {
-        Task<List<PrincipalPermission>> GetPermissionsAsync(
+        Task<PrincipalPermission?> GetPermissionsAsync(
             PrincipalType principalType,
             Guid principalId,
             ResourceType resourceType,
             Guid resourceId);
+        public Task AddOrUpdatePermissionsAsync(PrincipalPermission permission);
+        public Task RemovePermissionsAsync(
+            PrincipalType principalType,
+            Guid principalId,
+            ResourceType resourceType,
+            Guid resourceId);
+        public Task<List<PrincipalPermission>> GetPermissionsByResourceAsync(
+            ResourceType resourceType,
+            Guid resourceId);
+        public Task<List<PrincipalPermission>> GetPermissionsByPrincipalAsync(
+            PrincipalType principalType,
+            Guid principalId);
     }
 
     public class PrincipalPermissionRepository(AppDbContext dbContext) : IPrincipalPermissionRepository
     {
-        public Task<List<PrincipalPermission>> GetPermissionsAsync(
+        public Task<PrincipalPermission?> GetPermissionsAsync(
         PrincipalType principalType,
         Guid principalId,
         ResourceType resourceType,
         Guid resourceId)
         {
-            //return dbContext.PrincipalPermissions
-            //    .Where(p =>
-            //        p.PrincipalType == principalType &&
-            //        p.PrincipalId == principalId &&
-            //        p.ResourceType == resourceType &&
-            //        p.ResourceId == resourceId)
-            //    .ToListAsync();
+            return dbContext.PrincipalPermissions
+                .FirstOrDefaultAsync(p =>
+                    p.PrincipalType == principalType &&
+                    p.PrincipalId == principalId &&
+                    p.ResourceType == resourceType &&
+                    p.ResourceId == resourceId);
+        }
 
-            throw new NotImplementedException();
+        public async Task AddOrUpdatePermissionsAsync(PrincipalPermission permission)
+        {
+            var existing = dbContext.PrincipalPermissions
+                .FirstOrDefault(p =>
+                    p.PrincipalType == permission.PrincipalType &&
+                    p.PrincipalId == permission.PrincipalId &&
+                    p.ResourceType == permission.ResourceType &&
+                    p.ResourceId == permission.ResourceId);
+
+            if (existing != null)
+            {
+                existing.Permissions = permission.Permissions;
+                dbContext.PrincipalPermissions.Update(existing);
+            }
+            else
+            {
+                dbContext.PrincipalPermissions.Add(permission);
+            }
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task RemovePermissionsAsync(
+            PrincipalType principalType,
+            Guid principalId,
+            ResourceType resourceType,
+            Guid resourceId)
+        {
+            var existing = await dbContext.PrincipalPermissions
+                .FirstOrDefaultAsync(p =>
+                    p.PrincipalType == principalType &&
+                    p.PrincipalId == principalId &&
+                    p.ResourceType == resourceType &&
+                    p.ResourceId == resourceId);
+            if (existing != null)
+            {
+                dbContext.PrincipalPermissions.Remove(existing);
+                await dbContext.SaveChangesAsync();
+            }
+        }
+
+        public async Task<List<PrincipalPermission>> GetPermissionsByResourceAsync(
+            ResourceType resourceType,
+            Guid resourceId)
+        {
+            return await dbContext.PrincipalPermissions
+                .Where(p =>
+                    p.ResourceType == resourceType &&
+                    p.ResourceId == resourceId)
+                .ToListAsync();
+        }
+
+        public async Task<List<PrincipalPermission>> GetPermissionsByPrincipalAsync(
+            PrincipalType principalType,
+            Guid principalId)
+        {
+            return await dbContext.PrincipalPermissions
+                .Where(p =>
+                    p.PrincipalType == principalType &&
+                    p.PrincipalId == principalId)
+                .ToListAsync();
         }
     }
 }

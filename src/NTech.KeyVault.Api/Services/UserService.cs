@@ -11,7 +11,9 @@ namespace NTech.KeyVault.Api.Services
     public interface IUserService
     {
         public Task<User> CreateUserAsync(string username, string fullName, string email, string password);
+        public Task<List<User>> GetUsersAsync(int page, int pageSize);
         public Task<User?> GetUserById(string id, Func<IQueryable<User>, IQueryable<User>>? include = null);
+        public Task<List<User>> GetUsersByIdsAsync(List<Guid> userIds, Func<IQueryable<User>, IQueryable<User>>? include = null);
         public Task<User?> GetUserByEmail(string email, Func<IQueryable<User>, IQueryable<User>>? include = null);
         public Task<User?> GetUserByEmailOrUsername(string emailOrUsername, Func<IQueryable<User>, IQueryable<User>>? include = null);
         public Task UpdateUserAsync(User user);
@@ -65,9 +67,31 @@ namespace NTech.KeyVault.Api.Services
             return user;
         }
 
+        public async Task<List<User>> GetUsersAsync(int page, int pageSize)
+        {
+            var currentUser = await GetCurrentUserAsync(q => q.Include(u => u.UserRoles));
+            if (currentUser == null)
+                throw new Exception("Failed to get signed in user.");
+
+            var roles = currentUser.Roles;
+            bool isSystemAdmin = roles.Contains(Roles.SystemAdmin);
+
+            Func<IQueryable<User>, IQueryable<User>>? query = q => 
+                q.Include(u => u.UserRoles).Where(u => u.Id != currentUser.Id)
+                    .Where(u => isSystemAdmin ||
+                    !u.UserRoles.Any(ur => ur.Role == Roles.SystemAdmin || ur.Role == Roles.Admin));
+
+            return await userRepository.GetUsersAsync(page, pageSize, query);
+        }
+
         public async Task<User?> GetUserById(string id, Func<IQueryable<User>, IQueryable<User>>? include = null)
         {
             return await userRepository.GetById(id, include);
+        }
+
+        public async Task<List<User>> GetUsersByIdsAsync(List<Guid> userIds, Func<IQueryable<User>, IQueryable<User>>? include = null)
+        {
+            return await userRepository.GetByIdsAsync(userIds, include);
         }
 
         public async Task<User?> GetUserByEmail(string email, Func<IQueryable<User>, IQueryable<User>>? include = null)

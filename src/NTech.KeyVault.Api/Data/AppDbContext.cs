@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using NTech.KeyVault.Common.Enums;
 using NTech.KeyVault.Common.Models.Database;
 using System.Text.Json;
@@ -15,7 +16,7 @@ namespace NTech.KeyVault.Api.Data
         public DbSet<Application> Applications { get; set; }
 
         // DbSet for the PrincipalPermission entity to manage permissions for users and teams
-        //public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
+        public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -93,29 +94,37 @@ namespace NTech.KeyVault.Api.Data
                 .HasForeignKey(a => a.OwnerUserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            //// Configure the PrincipalPermission entity
-            //// Configure the conversion for the PrincipalType enum to string
-            //modelBuilder.Entity<PrincipalPermission>()
-            //    .Property(p => p.PrincipalType)
-            //    .HasConversion<string>();
+            // Configure the PrincipalPermission entity
+            // Configure the conversion for the PrincipalType enum to string
+            modelBuilder.Entity<PrincipalPermission>()
+                .Property(p => p.PrincipalType)
+                .HasConversion<string>();
 
-            //// Configure the conversion for the ResourceType enum to string
-            //modelBuilder.Entity<PrincipalPermission>()
-            //    .Property(p => p.ResourceType)
-            //    .HasConversion<string>();
+            // Configure the conversion for the ResourceType enum to string
+            modelBuilder.Entity<PrincipalPermission>()
+                .Property(p => p.ResourceType)
+                .HasConversion<string>();
 
-            //// Configure the conversion for the Permissions list to a JSON string
-            //modelBuilder.Entity<PrincipalPermission>()
-            //    .Property(p => p.Permissions)
-            //    .HasConversion(
-            //        v => JsonSerializer.Serialize(
-            //            v.Select(p => p.ToString().Replace("_", ":")).ToList(),
-            //            (JsonSerializerOptions)null!
-            //        ),
-            //        v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null!)!
-            //            .Select(s => Enum.Parse<Permission>(s.Replace(":", "_")))
-            //            .ToList()
-            //    );
+            // Create a ValueComparer for the List<Permission> to ensure proper change tracking and equality comparison
+            var comparer = new ValueComparer<List<Permission>>(
+                (a, b) => a!.SequenceEqual(b!),                     // equality
+                a => a.Aggregate(0, (h, v) => HashCode.Combine(h, v.GetHashCode())), // hash
+                a => a.ToList()                                     // snapshot (deep copy)
+            );
+
+            // Configure the conversion for the Permissions list to a JSON string
+            modelBuilder.Entity<PrincipalPermission>()
+                .Property(p => p.Permissions)
+                .HasConversion(
+                    v => JsonSerializer.Serialize(
+                        v.Select(p => p.ToString().Replace("_", ":")).ToList(),
+                        (JsonSerializerOptions)null!
+                    ),
+                    v => JsonSerializer.Deserialize<List<string>>(v, (JsonSerializerOptions)null!)!
+                        .Select(s => Enum.Parse<Permission>(s.Replace(":", "_")))
+                        .ToList()
+                )
+                .Metadata.SetValueComparer(comparer);
         }
     }
 }

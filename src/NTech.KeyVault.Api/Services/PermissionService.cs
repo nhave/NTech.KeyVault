@@ -6,18 +6,37 @@ namespace NTech.KeyVault.Api.Services
 {
     public interface IPermissionService
     {
-        Task<List<Permission>> GetPermissionsAsync(
+        public Task<List<Permission>> GetPermissionsAsync(
             Guid userId,
             IEnumerable<Guid> teamIds,
             ResourceType resourceType,
             Guid resourceId);
-
-        Task<bool> HasPermissionAsync(
+        public Task<bool> HasPermissionAsync(
             Guid userId,
             IEnumerable<Guid> teamIds,
             ResourceType resourceType,
             Guid resourceId,
             Permission required);
+        public Task SetPermissionsAsync(
+            PrincipalType principalType,
+            Guid principalId,
+            ResourceType resourceType,
+            Guid resourceId,
+            List<Permission> permissions);
+        public Task RemovePermissionsAsync(
+            PrincipalType principalType,
+            Guid principalId,
+            ResourceType resourceType,
+            Guid resourceId);
+        public Task<List<PrincipalPermission>> GetPrincipalsForUserAsync(
+            Guid userId,
+            ResourceType resourceType);
+        public Task<List<PrincipalPermission>> GetPrincipalsForTeamAsync(
+            Guid teamId,
+            ResourceType resourceType);
+        public Task<List<PrincipalPermission>> GetPrincipalsForResourceAsync(
+            ResourceType resourceType,
+            Guid resourceId);
     }
 
     public class PermissionService(IPrincipalPermissionRepository permissionRepository) : IPermissionService
@@ -72,6 +91,58 @@ namespace NTech.KeyVault.Api.Services
                 resourceId);
 
             return perms.Contains(required);
+        }
+
+        public async Task SetPermissionsAsync(
+            PrincipalType principalType,
+            Guid principalId,
+            ResourceType resourceType,
+            Guid resourceId,
+            List<Permission> permissions)
+        {
+            var perm = new PrincipalPermission
+            {
+                PrincipalType = principalType,
+                PrincipalId = principalId,
+                ResourceType = resourceType,
+                ResourceId = resourceId,
+                Permissions = permissions
+            };
+            await permissionRepository.AddOrUpdatePermissionsAsync(perm);
+        }
+
+        public async Task RemovePermissionsAsync(
+            PrincipalType principalType,
+            Guid principalId,
+            ResourceType resourceType,
+            Guid resourceId)
+        {
+            await permissionRepository.RemovePermissionsAsync(
+                principalType,
+                principalId,
+                resourceType,
+                resourceId);
+        }
+
+        public async Task<List<PrincipalPermission>> GetPrincipalsForUserAsync(
+            Guid userId,
+            ResourceType resourceType)
+        {
+            var userPerms = await permissionRepository.GetPermissionsByPrincipalAsync(PrincipalType.User, userId);
+
+            return userPerms
+                .Where(p => p.ResourceType == resourceType)
+                .ToList();
+        }
+
+        public async Task<List<PrincipalPermission>> GetPrincipalsForTeamAsync(Guid teamId, ResourceType resourceType)
+        {
+            throw new NotImplementedException();
+        }
+
+        public async Task<List<PrincipalPermission>> GetPrincipalsForResourceAsync(ResourceType resourceType, Guid resourceId)
+        {
+            return await permissionRepository.GetPermissionsByResourceAsync(resourceType, resourceId);
         }
     }
 }
