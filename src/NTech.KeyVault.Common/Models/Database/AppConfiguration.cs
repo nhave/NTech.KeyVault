@@ -11,5 +11,10 @@
         public required byte[] DataNonce { get; set; }
         public required byte[] EncryptedDataKey { get; set; }
         public required byte[] DataKeyNonce { get; set; }
+
+        // Audit fields (To be implemented later)
+        public int Version { get; set; } = 0;
+        public Guid? CreatedById { get; set; }
+        public User? CreatedBy { get; set; }
     }
 }

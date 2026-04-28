@@ -94,17 +94,23 @@ namespace NTech.KeyVault.Api.Data
                 .HasForeignKey(a => a.OwnerUserId)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            // Configure the one-to-one relationship between Application and AppConfiguration
+            // Configure unique index for the Application entity
             modelBuilder.Entity<AppConfiguration>()
-                .HasIndex(a => a.ApplicationId)
-                .IsUnique();
+                .HasIndex(a => new { a.ApplicationId , a.Version });
 
             // Configure the relationship between AppConfiguration and Application with cascade delete
             modelBuilder.Entity<AppConfiguration>()
                 .HasOne(ac => ac.Application)
-                .WithOne()
-                .HasForeignKey<AppConfiguration>(ac => ac.ApplicationId)
+                .WithMany()
+                .HasForeignKey(ac => ac.ApplicationId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure the relationship between AppConfiguration and User for the CreatedBy property with SetNull on delete
+            modelBuilder.Entity<AppConfiguration>()
+                .HasOne(ac => ac.CreatedBy)
+                .WithMany()
+                .HasForeignKey(ac => ac.CreatedById)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Configure the PrincipalPermission entity
             // Configure the conversion for the PrincipalType enum to string

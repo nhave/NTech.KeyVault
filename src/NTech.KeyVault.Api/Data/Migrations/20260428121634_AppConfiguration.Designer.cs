@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NTech.KeyVault.Api.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NTech.KeyVault.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260428121634_AppConfiguration")]
+    partial class AppConfiguration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,9 +38,6 @@ namespace NTech.KeyVault.Api.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("CreatedById")
-                        .HasColumnType("uuid");
-
                     b.Property<byte[]>("DataKeyNonce")
                         .IsRequired()
                         .HasColumnType("bytea");
@@ -57,14 +57,10 @@ namespace NTech.KeyVault.Api.Data.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<int>("Version")
-                        .HasColumnType("integer");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("CreatedById");
-
-                    b.HasIndex("ApplicationId", "Version");
+                    b.HasIndex("ApplicationId")
+                        .IsUnique();
 
                     b.ToTable("AppConfigurations");
                 });
@@ -354,19 +350,12 @@ namespace NTech.KeyVault.Api.Data.Migrations
             modelBuilder.Entity("NTech.KeyVault.Common.Models.Database.AppConfiguration", b =>
                 {
                     b.HasOne("NTech.KeyVault.Common.Models.Database.Application", "Application")
-                        .WithMany()
-                        .HasForeignKey("ApplicationId")
+                        .WithOne()
+                        .HasForeignKey("NTech.KeyVault.Common.Models.Database.AppConfiguration", "ApplicationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("NTech.KeyVault.Common.Models.Database.User", "CreatedBy")
-                        .WithMany()
-                        .HasForeignKey("CreatedById")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.Navigation("Application");
-
-                    b.Navigation("CreatedBy");
                 });
 
             modelBuilder.Entity("NTech.KeyVault.Common.Models.Database.Application", b =>

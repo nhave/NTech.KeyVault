@@ -4,4 +4,6 @@
 
     public record ApplicationUserResponse(Guid Id, string Username, List<string> Permissions);
     public record ApplicationUsersResponse(Guid ApplicationId, List<ApplicationUserResponse> Users);
+
+    public record ApplicationConfigurationResponse(Guid ApplicationId, int Version, Guid? CreatedById, string? CreatedByUsername, Dictionary<string, object> ConfigurationData);
 }
