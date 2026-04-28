@@ -56,7 +56,8 @@ namespace NTech.KeyVault.Api.Services
                 resourceType,
                 resourceId);
 
-            all.AddRange(userPerms);
+            if (userPerms != null)
+                all.AddRange(userPerms);
 
             // Team permissions
             foreach (var teamId in teamIds)
@@ -67,7 +68,8 @@ namespace NTech.KeyVault.Api.Services
                     resourceType,
                     resourceId);
 
-                all.AddRange(teamPerms);
+                if (teamPerms != null)
+                    all.AddRange(teamPerms);
             }
 
             // Flad liste af enum-permissions

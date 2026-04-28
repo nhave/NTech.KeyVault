@@ -1,4 +1,5 @@
-﻿using NTech.KeyVault.Api.Repositories;
+﻿using NTech.KeyVault.Api.Data.migrations;
+using NTech.KeyVault.Api.Repositories;
 using NTech.KeyVault.Common.Enums;
 using NTech.KeyVault.Common.Models.Core;
 using NTech.KeyVault.Common.Models.Database;
@@ -12,6 +13,7 @@ namespace NTech.KeyVault.Api.Services
         public Task<DecryptedApplication> CreateApplicationAsync(CreateApplicationRequest dto);
         public Task<List<ApplicationResponse>> GetAccessibleApplicationsAsync();
         public Task SetUserPermissionsAsync(Guid applicationId, Guid userId, List<Permission> permissions);
+        public Task<ApplicationUserResponse> GetUserPermissionsAsync(Guid applicationId, Guid userId);
         public Task<ApplicationUsersResponse> GetApplicationUsersAsync(Guid applicationId);
         public Task RemoveUserPermissionsAsync(Guid applicationId, Guid userId);
     }
@@ -53,9 +55,10 @@ namespace NTech.KeyVault.Api.Services
                 app.Description,
                 app.OwnerUserId,
                 app.OwnerUser?.Username,
-                app.OwnerUserId == user.Id ? Enum.GetNames<Permission>().ToList() : 
+                app.OwnerUserId == user.Id ? PermissionHelper.GetPermissionsForAsStrings(ResourceType.Application) : 
                     principalPermissions.Where(p => p.ResourceId == app.Id)
                         .SelectMany(p => p.Permissions)
+                        .Where(p => PermissionHelper.IsValidPermissionFor(ResourceType.Application, p))
                         .Select(p => p.ToString())
                         .ToList()
             )).ToList();
@@ -115,9 +118,44 @@ namespace NTech.KeyVault.Api.Services
                     u.Username,
                     permissions.Where(p => p.PrincipalType == PrincipalType.User && p.PrincipalId == u.Id)
                         .SelectMany(p => p.Permissions)
+                        .Where(p => PermissionHelper.IsValidPermissionFor(ResourceType.Application, p))
                         .Select(p => p.ToString())
                         .ToList()
                 )).ToList()
+            );
+        }
+
+        public async Task<ApplicationUserResponse> GetUserPermissionsAsync(Guid applicationId, Guid userId)
+        {
+            var currentUser = await userService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new Exception("Failed to get signed in user.");
+
+            var application = await applicationRepository.GetApplicationByIdAsync(applicationId);
+            if (application == null)
+                throw new ArgumentException("Application not found.");
+
+            var isOwner = application.OwnerUserId == currentUser.Id;
+            var isSelf = currentUser.Id == userId;
+            if (!isOwner && !isSelf)
+                throw new InvalidOperationException("Only the owner or the user themselves can view permissions.");
+
+            var user = await userService.GetUserById(userId.ToString());
+            if (user == null)
+                throw new ArgumentException("User not found.");
+
+            var permissions = await permissionService.GetPrincipalsForResourceAsync(ResourceType.Application, applicationId);
+            var userPermissions = permissions.Where(p => p.PrincipalType == PrincipalType.User && p.PrincipalId == userId)
+                .SelectMany(p => p.Permissions)
+                .Where(p => PermissionHelper.IsValidPermissionFor(ResourceType.Application, p))
+                .Select(p => p.ToString())
+                .ToList();
+
+            return new ApplicationUserResponse
+            (
+                user.Id,
+                user.Username,
+                userPermissions
             );
         }
 

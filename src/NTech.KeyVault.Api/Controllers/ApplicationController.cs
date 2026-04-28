@@ -72,9 +72,41 @@ namespace NTech.KeyVault.Api.Controllers
         {
             try
             {
-                List<Permission> enumPermissions = Enum.GetValues<Permission>().Where(p => dto.Permissions.Contains(p.ToString())).ToList();
+                List<Permission> enumPermissions = PermissionHelper.Parse(ResourceType.Application, dto.Permissions);
                 await applicationService.SetUserPermissionsAsync(dto.ApplicationId, dto.UserId, enumPermissions);
                 return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch
+            {
+                return StatusCode(500);
+            }
+        }
+
+        /// <summary>
+        /// Retrieves the list of permissions assigned to a specific user for a given application.
+        /// </summary>
+        /// <remarks>Only application owners and the user themselves are authorized to access this
+        /// endpoint. The response includes only the permissions for the specified user, not all users with permissions
+        /// for the application.</remarks>
+        /// <param name="applicationId">The unique identifier of the application for which to retrieve the user's permissions.</param>
+        /// <param name="userId">The unique identifier of the user whose permissions are being requested.</param>
+        /// <returns>An ActionResult containing a list of permission names assigned to the specified user for the application.
+        /// Returns an empty list if the user has no permissions.</returns>
+        [HttpGet("GetUserPermissions")]
+        public async Task<ActionResult<List<string>>> GetUserPermissions(Guid applicationId, Guid userId)
+        {
+            try
+            {
+                var response = await applicationService.GetUserPermissionsAsync(applicationId, userId);
+                return Ok(response.Permissions);
             }
             catch (ArgumentException ex)
             {

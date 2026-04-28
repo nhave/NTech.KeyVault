@@ -14,8 +14,8 @@ namespace NTech.KeyVault.Api.Data
         public DbSet<UserMfaMethod> UserMfaMethods { get; set; }
 
         public DbSet<Application> Applications { get; set; }
+        public DbSet<AppConfiguration> AppConfigurations { get; set; }
 
-        // DbSet for the PrincipalPermission entity to manage permissions for users and teams
         public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -93,6 +93,18 @@ namespace NTech.KeyVault.Api.Data
                 .WithMany()
                 .HasForeignKey(a => a.OwnerUserId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            // Configure the one-to-one relationship between Application and AppConfiguration
+            modelBuilder.Entity<AppConfiguration>()
+                .HasIndex(a => a.ApplicationId)
+                .IsUnique();
+
+            // Configure the relationship between AppConfiguration and Application with cascade delete
+            modelBuilder.Entity<AppConfiguration>()
+                .HasOne(ac => ac.Application)
+                .WithOne()
+                .HasForeignKey<AppConfiguration>(ac => ac.ApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure the PrincipalPermission entity
             // Configure the conversion for the PrincipalType enum to string
