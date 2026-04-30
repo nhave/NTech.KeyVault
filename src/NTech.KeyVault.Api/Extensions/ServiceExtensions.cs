@@ -26,6 +26,7 @@ namespace NTech.KeyVault.Api.Extensions
             services.AddScoped<IEncryptionService, EncryptionService>();
             services.AddScoped<IApplicationService, ApplicationService>();
             services.AddScoped<IAppConfigurationService, AppConfigurationService>();
+            services.AddScoped<IAppIOService, AppIOService>();
             services.AddScoped<IPermissionService, PermissionService>();
         }
     }

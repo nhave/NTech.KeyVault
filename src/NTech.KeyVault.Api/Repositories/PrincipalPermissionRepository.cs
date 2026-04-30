@@ -13,11 +13,8 @@ namespace NTech.KeyVault.Api.Repositories
             ResourceType resourceType,
             Guid resourceId);
         public Task AddOrUpdatePermissionsAsync(PrincipalPermission permission);
-        public Task RemovePermissionsAsync(
-            PrincipalType principalType,
-            Guid principalId,
-            ResourceType resourceType,
-            Guid resourceId);
+        public Task RemoveAsync(PrincipalPermission permission);
+        public Task RemoveRangeAsync(List<PrincipalPermission> permissions);
         public Task<List<PrincipalPermission>> GetPermissionsByResourceAsync(
             ResourceType resourceType,
             Guid resourceId);
@@ -63,23 +60,21 @@ namespace NTech.KeyVault.Api.Repositories
             await dbContext.SaveChangesAsync();
         }
 
-        public async Task RemovePermissionsAsync(
-            PrincipalType principalType,
-            Guid principalId,
-            ResourceType resourceType,
-            Guid resourceId)
+        public async Task RemoveAsync(PrincipalPermission permission)
         {
-            var existing = await dbContext.PrincipalPermissions
-                .FirstOrDefaultAsync(p =>
-                    p.PrincipalType == principalType &&
-                    p.PrincipalId == principalId &&
-                    p.ResourceType == resourceType &&
-                    p.ResourceId == resourceId);
-            if (existing != null)
+            dbContext.PrincipalPermissions.Remove(permission);
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task RemoveRangeAsync(List<PrincipalPermission> permissions)
+        {
+            if (permissions == null || !permissions.Any())
             {
-                dbContext.PrincipalPermissions.Remove(existing);
-                await dbContext.SaveChangesAsync();
+                return;
             }
+
+            dbContext.PrincipalPermissions.RemoveRange(permissions);
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task<List<PrincipalPermission>> GetPermissionsByResourceAsync(

@@ -1,5 +1,6 @@
 ﻿namespace NTech.KeyVault.Common.Models.Dtos.Responses
 {
+    public record SimpleApplicationResponse(Guid Id, string Name, string? Description, Guid? OwnerUserId);
     public record ApplicationResponse(Guid Id, string Name, string? Description, Guid? OwnerUserId, string? OwnerUsername, List<string> Permissions);
 
     public record ApplicationUserResponse(Guid Id, string Username, List<string> Permissions);

@@ -28,6 +28,9 @@ namespace NTech.KeyVault.Api.Services
             Guid principalId,
             ResourceType resourceType,
             Guid resourceId);
+        public Task RemovePrincipalsFromResourceAsync(
+            ResourceType resourceType,
+            Guid resourceId);
         public Task<List<PrincipalPermission>> GetPrincipalsForUserAsync(
             Guid userId,
             ResourceType resourceType);
@@ -119,11 +122,22 @@ namespace NTech.KeyVault.Api.Services
             ResourceType resourceType,
             Guid resourceId)
         {
-            await permissionRepository.RemovePermissionsAsync(
+            var principalPerms = await permissionRepository.GetPermissionsAsync(
                 principalType,
                 principalId,
                 resourceType,
                 resourceId);
+
+            if (principalPerms == null)
+                throw new KeyNotFoundException("Permissions not found for principal and resource");
+
+            await permissionRepository.RemoveAsync(principalPerms);
+        }
+
+        public async Task RemovePrincipalsFromResourceAsync(ResourceType resourceType, Guid resourceId)
+        {
+            var permissions = await permissionRepository.GetPermissionsByResourceAsync(resourceType, resourceId);
+            await permissionRepository.RemoveRangeAsync(permissions);
         }
 
         public async Task<List<PrincipalPermission>> GetPrincipalsForUserAsync(

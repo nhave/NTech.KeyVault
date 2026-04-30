@@ -38,6 +38,75 @@ namespace NTech.KeyVault.Api.Controllers
         }
 
         /// <summary>
+        /// Retrieves the details of a specific application identified by its unique identifier.
+        /// </summary>
+        /// <remarks>Returns a 400 Bad Request if the application identifier is invalid, a 404 Not Found
+        /// if the application does not exist, or a 401 Unauthorized if the caller does not have permission to access
+        /// the application. Returns a 500 Internal Server Error for unexpected failures.</remarks>
+        /// <param name="ApplicationId">The unique identifier of the application to retrieve.</param>
+        /// <returns>An ActionResult containing the decrypted application details if found; otherwise, an appropriate error
+        /// response.</returns>
+        [HttpGet("GetDetails")]
+        public async Task<ActionResult<DecryptedApplication>> GetApplicationDetails(Guid ApplicationId)
+        {
+            try
+            {
+                var application = await applicationService.GetApplicationDetailsAsync(ApplicationId);
+                return Ok(application);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch(KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch
+            {
+                return StatusCode(500);
+            }
+        }
+
+        /// <summary>
+        /// Deletes the specified application by its unique identifier and name.
+        /// </summary>
+        /// <param name="applicationId">The unique identifier of the application to delete.</param>
+        /// <param name="applicationName">The name of the application to delete. This value is used to verify the application before deletion.</param>
+        /// <returns>An HTTP response indicating the result of the delete operation. Returns 204 No Content if the deletion is
+        /// successful; 400 Bad Request if the input is invalid; 404 Not Found if the application does not exist; 401
+        /// Unauthorized if the caller lacks permission; or 500 Internal Server Error for unexpected errors.</returns>
+        [HttpDelete("Delete")]
+        public async Task<ActionResult> DeleteApplication(Guid applicationId, string applicationName)
+        {
+            try
+            {
+                await applicationService.DeleteApplicationAsync(applicationId, applicationName);
+                return NoContent();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch
+            {
+                return StatusCode(500);
+            }
+        }
+
+        /// <summary>
         /// Retrieves a list of applications that the current user is authorized to access.
         /// </summary>
         /// <returns>An <see cref="ActionResult{T}"/> containing a list of <see cref="ApplicationResponse"/> objects representing
@@ -80,7 +149,7 @@ namespace NTech.KeyVault.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (InvalidOperationException ex)
+            catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(ex.Message);
             }
@@ -112,7 +181,7 @@ namespace NTech.KeyVault.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (InvalidOperationException ex)
+            catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(ex.Message);
             }
@@ -144,7 +213,7 @@ namespace NTech.KeyVault.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (InvalidOperationException ex)
+            catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(ex.Message);
             }
@@ -176,7 +245,7 @@ namespace NTech.KeyVault.Api.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (InvalidOperationException ex)
+            catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(ex.Message);
             }

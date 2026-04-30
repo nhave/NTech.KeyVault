@@ -1,16 +1,18 @@
-﻿using NTech.KeyVault.Api.Data.migrations;
-using NTech.KeyVault.Api.Repositories;
+﻿using NTech.KeyVault.Api.Repositories;
 using NTech.KeyVault.Common.Enums;
 using NTech.KeyVault.Common.Models.Core;
 using NTech.KeyVault.Common.Models.Database;
 using NTech.KeyVault.Common.Models.Dtos.Requests;
 using NTech.KeyVault.Common.Models.Dtos.Responses;
+using System.Text;
 
 namespace NTech.KeyVault.Api.Services
 {
     public interface IApplicationService
     {
         public Task<DecryptedApplication> CreateApplicationAsync(CreateApplicationRequest dto);
+        public Task<DecryptedApplication?> GetApplicationDetailsAsync(Guid applicationId);
+        public Task DeleteApplicationAsync(Guid applicationId, string applicationName);
         public Task<List<ApplicationResponse>> GetAccessibleApplicationsAsync();
         public Task SetUserPermissionsAsync(Guid applicationId, Guid userId, List<Permission> permissions);
         public Task<ApplicationUserResponse> GetUserPermissionsAsync(Guid applicationId, Guid userId);
@@ -18,7 +20,7 @@ namespace NTech.KeyVault.Api.Services
         public Task RemoveUserPermissionsAsync(Guid applicationId, Guid userId);
     }
 
-    public class ApplicationService(IApplicationRepository applicationRepository, IUserService userService, IPermissionService permissionService) : IApplicationService
+    public class ApplicationService(IApplicationRepository applicationRepository, IUserService userService, IPermissionService permissionService, IEncryptionService encryptionService) : IApplicationService
     {
         public async Task<DecryptedApplication> CreateApplicationAsync(CreateApplicationRequest dto)
         {
@@ -30,6 +32,58 @@ namespace NTech.KeyVault.Api.Services
                 throw new Exception("Failed to get signed in user.");
 
             return await applicationRepository.CreateApplicationAsync(user.Id, dto.Name, dto.Description);
+        }
+
+        public async Task<DecryptedApplication> GetApplicationDetailsAsync(Guid applicationId)
+        {
+            var currentUser = await userService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new Exception("Failed to get signed in user.");
+
+            var application = await applicationRepository.GetApplicationByIdAsync(applicationId)
+                ?? throw new KeyNotFoundException($"Application with ID {applicationId} not found.");
+
+            var isOwner = application.OwnerUserId == currentUser.Id;
+            if (!isOwner && !await permissionService.HasPermissionAsync(currentUser.Id, new List<Guid>(), ResourceType.Application, applicationId, Permission.Application_Admin))
+                throw new UnauthorizedAccessException("User does not have permission to access this application's information.");
+
+            var decrypted = encryptionService.Decrypt(
+                application.EncryptedSecret,
+                application.EncryptedDataKey,
+                application.SecretNonce,
+                application.DataKeyNonce
+            );
+            var secret = Encoding.UTF8.GetString(decrypted.Value);
+
+            return new DecryptedApplication
+            {
+                Id = application.Id,
+                Name = application.Name,
+                Description = application.Description,
+                OwnerUserId = application.OwnerUserId,
+                AppSecret = secret
+            };
+        }
+
+        public async Task DeleteApplicationAsync(Guid applicationId, string applicationName)
+        {
+            var currentUser = await userService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new Exception("Failed to get signed in user.");
+
+            var application = await applicationRepository.GetApplicationByIdAsync(applicationId);
+            if (application == null)
+                throw new KeyNotFoundException("Application not found.");
+
+            var isOwner = application.OwnerUserId == currentUser.Id;
+            if (!isOwner && !await permissionService.HasPermissionAsync(currentUser.Id, new List<Guid>(), ResourceType.Application, applicationId, Permission.Application_Admin))
+                throw new UnauthorizedAccessException("User does not have permission to delete this application.");
+
+            if (application.Name != applicationName)
+                throw new ArgumentException("Application name does not match. Deletion aborted.");
+
+            await permissionService.RemovePrincipalsFromResourceAsync(ResourceType.Application, applicationId);
+            await applicationRepository.DeleteApplicationAsync(application);
         }
 
         public async Task<List<ApplicationResponse>> GetAccessibleApplicationsAsync()
@@ -82,7 +136,7 @@ namespace NTech.KeyVault.Api.Services
 
             var isOwner = application.OwnerUserId == currentUser.Id;
             if (!isOwner)
-                throw new InvalidOperationException("Only the owner can set permissions.");
+                throw new UnauthorizedAccessException("Only the owner can set permissions.");
 
             await permissionService.SetPermissionsAsync(
                 PrincipalType.User,
@@ -103,7 +157,7 @@ namespace NTech.KeyVault.Api.Services
                 throw new ArgumentException("Application not found.");
 
             if (application.OwnerUserId != currentUser.Id)
-                throw new InvalidOperationException("Only the owner can view user permissions.");
+                throw new UnauthorizedAccessException("Only the owner can view user permissions.");
 
             var permissions = await permissionService.GetPrincipalsForResourceAsync(ResourceType.Application, applicationId);
             var userIds = permissions.Where(p => p.PrincipalType == PrincipalType.User).Select(p => p.PrincipalId).ToList();
@@ -138,7 +192,7 @@ namespace NTech.KeyVault.Api.Services
             var isOwner = application.OwnerUserId == currentUser.Id;
             var isSelf = currentUser.Id == userId;
             if (!isOwner && !isSelf)
-                throw new InvalidOperationException("Only the owner or the user themselves can view permissions.");
+                throw new UnauthorizedAccessException("Only the owner or the user themselves can view permissions.");
 
             var user = await userService.GetUserById(userId.ToString());
             if (user == null)
@@ -174,7 +228,7 @@ namespace NTech.KeyVault.Api.Services
 
             var isOwner = application.OwnerUserId == currentUser.Id;
             if (!isOwner)
-                throw new InvalidOperationException("Only the owner can remove permissions.");
+                throw new UnauthorizedAccessException("Only the owner can remove permissions.");
 
             await permissionService.RemovePermissionsAsync(
                 PrincipalType.User,

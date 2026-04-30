@@ -1,0 +1,55 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using NTech.KeyVault.Api.Services;
+using NTech.KeyVault.Common.Models.Dtos.Responses;
+
+namespace NTech.KeyVault.Api.Controllers
+{
+    [ApiController]
+    [Route("[controller]")]
+    public class AppIOController(IAppIOService iOService) : ControllerBase
+    {
+        [HttpGet("Validate")]
+        public async Task<ActionResult<SimpleApplicationResponse>> Validate([FromHeader] string ApplicationId, [FromHeader] string ApplicationSecret)
+        {
+            try
+            {
+                var result = await iOService.ValidateAsync(ApplicationId, ApplicationSecret);
+                return Ok(result);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(ex.Message);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500);
+            }
+        }
+
+        [HttpGet("Config")]
+        public async Task<ActionResult> GetConfig()
+        {
+            return Ok();
+        }
+
+        [HttpGet("Secret")]
+        public async Task<ActionResult> GetSecret()
+        {
+            return Ok();
+        }
+
+        [HttpPost("Secret")]
+        public async Task<ActionResult> SerSecret()
+        {
+            return Ok();
+        }
+    }
+}

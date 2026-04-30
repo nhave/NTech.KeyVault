@@ -4,6 +4,7 @@ namespace NTech.KeyVault.Common.Enums
 {
     public enum Permission
     {
+        Application_Admin,
         Application_Config_Read,
         Application_Config_Write,
         Application_Secret_Read,
