@@ -5,18 +5,15 @@ namespace NTech.KeyVault.Api.Services
 {
     public interface IAppIOService
     {
-        public Task<SimpleApplicationResponse> ValidateAsync(string applicationId, string applicationSecret);
+        public Task<SimpleApplicationResponse> ValidateAsync(Guid applicationId, string applicationSecret);
+        public Task<ApplicationConfigurationResponse> GetByAppIdAsync(Guid applicationId, string applicationSecret);
     }
 
-    public class AppIOService(IApplicationRepository applicationRepository, IEncryptionService encryptionService) : IAppIOService
+    public class AppIOService(IApplicationRepository applicationRepository, IAppConfigurationService appConfigurationService, IEncryptionService encryptionService) : IAppIOService
     {
-        public async Task<SimpleApplicationResponse> ValidateAsync(string applicationId, string applicationSecret)
+        public async Task<SimpleApplicationResponse> ValidateAsync(Guid applicationId, string applicationSecret)
         {
-            var appIdGuid = Guid.TryParse(applicationId, out var parsedAppId)
-                ? parsedAppId
-                : throw new ArgumentException("Invalid application ID format.", nameof(applicationId));
-
-            var application = await applicationRepository.GetApplicationByIdAsync(appIdGuid)
+            var application = await applicationRepository.GetApplicationByIdAsync(applicationId)
                 ?? throw new KeyNotFoundException($"Application with ID {applicationId} not found.");
 
             var providedSecretHash = encryptionService.CreateLookupHash(applicationSecret);
@@ -30,6 +27,18 @@ namespace NTech.KeyVault.Api.Services
                 application.Description,
                 application.OwnerUserId
             );
+        }
+
+        public async Task<ApplicationConfigurationResponse> GetByAppIdAsync(Guid applicationId, string applicationSecret)
+        {
+            var application = await applicationRepository.GetApplicationByIdAsync(applicationId)
+                ?? throw new KeyNotFoundException($"Application with ID {applicationId} not found.");
+
+            var providedSecretHash = encryptionService.CreateLookupHash(applicationSecret);
+            if (application.AppSecretHash != providedSecretHash)
+                throw new UnauthorizedAccessException("Invalid application secret.");
+
+            return await appConfigurationService.GetByAppIdAsync(applicationId);
         }
     }
 }

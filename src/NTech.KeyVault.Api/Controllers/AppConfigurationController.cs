@@ -36,7 +36,7 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("{appId}")]
         public async Task<ActionResult<ApplicationConfigurationResponse>> GetAppConfiguration(Guid appId)
         {
-            var config = await configurationService.GetByAppIdAsync(appId);
+            var config = await configurationService.GetByAppIdWithPermissionsAsync(appId);
             return Ok(config);
         }
 

@@ -6,5 +6,24 @@
     public record ApplicationUserResponse(Guid Id, string Username, List<string> Permissions);
     public record ApplicationUsersResponse(Guid ApplicationId, List<ApplicationUserResponse> Users);
 
-    public record ApplicationConfigurationResponse(Guid ApplicationId, int Version, Guid? CreatedById, string? CreatedByUsername, Dictionary<string, object> ConfigurationData);
+    public class ApplicationConfigurationResponse
+    {
+        public Guid ApplicationId { get; }
+        public int Version { get; }
+        public Guid? CreatedById { get; }
+        public string? CreatedByUsername { get; }
+        public Dictionary<string, object> ConfigurationData { get; }
+
+        public ApplicationConfigurationResponse(Guid ApplicationId, int Version, Guid? CreatedById, string? CreatedByUsername, Dictionary<string, object> ConfigurationData)
+        {
+            this.ApplicationId = ApplicationId;
+            this.Version = Version;
+            this.CreatedById = CreatedById;
+            this.CreatedByUsername = CreatedByUsername;
+            this.ConfigurationData = ConfigurationData;
+        }
+
+        public ApplicationConfigurationResponse(Guid ApplicationId)
+            : this(ApplicationId, -1, null, null, new Dictionary<string, object>()) { }
+    }
 }

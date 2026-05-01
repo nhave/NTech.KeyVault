@@ -10,6 +10,7 @@ namespace NTech.KeyVault.Api.Services
     public interface IAppConfigurationService
     {
         public Task AddOrUpdateAsync(Guid appId, Dictionary<string, object> configData);
+        public Task<ApplicationConfigurationResponse> GetByAppIdWithPermissionsAsync(Guid appId);
         public Task<ApplicationConfigurationResponse> GetByAppIdAsync(Guid appId);
         public Task<ApplicationConfigurationResponse> GetByAppIdAndVersionAsync(Guid appId, int version);
         public Task<List<int>> GetAllVersionsByAppIdAsync(Guid appId);
@@ -48,7 +49,7 @@ namespace NTech.KeyVault.Api.Services
             await configurationRepository.AddOrUpdate(newConfig);
         }
 
-        public async Task<ApplicationConfigurationResponse> GetByAppIdAsync(Guid appId)
+        public async Task<ApplicationConfigurationResponse> GetByAppIdWithPermissionsAsync(Guid appId)
         {
             var currentUser = await userService.GetCurrentUserAsync()
                 ?? throw new Exception("Current user not found.");
@@ -60,8 +61,14 @@ namespace NTech.KeyVault.Api.Services
             if (!isOwner && !await permissionService.HasPermissionAsync(currentUser.Id, new List<Guid>(), ResourceType.Application, appId, Permission.Application_Config_Read))
                 throw new UnauthorizedAccessException("User does not have permission to view this application's configuration.");
 
-            var config = await configurationRepository.GetLatestByAppIdAsync(appId)
-                ?? throw new KeyNotFoundException($"No configuration found for application ID {appId}");
+            return await GetByAppIdAsync(appId);
+        }
+
+        public async Task<ApplicationConfigurationResponse> GetByAppIdAsync(Guid appId)
+        {
+            var config = await configurationRepository.GetLatestByAppIdAsync(appId);
+            if (config == null)
+                return new ApplicationConfigurationResponse(appId);
 
             var decryptedData = DecryptConfig(config);
 
@@ -156,7 +163,7 @@ namespace NTech.KeyVault.Api.Services
         {
             var decryptionResult = encryptionService.Decrypt(config.EncryptedData, config.EncryptedDataKey, config.DataNonce, config.DataKeyNonce);
             var deserializedData = JsonSerializer.Deserialize<Dictionary<string, object>>(decryptionResult.Value)
-                ?? throw new InvalidOperationException("Failed to deserialize configuration data.");
+                ?? throw new Exception("Failed to deserialize configuration data.");
 
             return deserializedData;
         }
