@@ -38,7 +38,9 @@ namespace NTech.KeyVault.Api.Middlewares
                     404 => "Resource not found",
                     _ => "Internal server error"
                 },
-                Detail = ex.Message,
+                Detail = status == 500
+                    ? "An unexpected error occurred."
+                    : ex.Message,
                 Instance = context.Request.Path,
                 Type = status switch
                 {
