@@ -27,6 +27,9 @@ namespace NTech.KeyVault.Api.Services
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             if (string.IsNullOrWhiteSpace(dto.Name)) throw new ArgumentNullException(nameof(dto.Name));
 
+            // Normalize description to null if it's empty or whitespace
+            var description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description;
+
             var user = await userService.GetCurrentUserAsync();
             if (user == null)
                 throw new Exception("Failed to get signed in user.");
@@ -132,11 +135,15 @@ namespace NTech.KeyVault.Api.Services
 
             var application = await applicationRepository.GetApplicationByIdAsync(applicationId);
             if (application == null)
-                throw new ArgumentException("Application not found.");
+                throw new KeyNotFoundException("Application not found.");
 
             var isOwner = application.OwnerUserId == currentUser.Id;
             if (!isOwner)
                 throw new UnauthorizedAccessException("Only the owner can set permissions.");
+
+            var user = await userService.GetUserById(userId.ToString());
+            if (user == null)
+                throw new KeyNotFoundException("User not found.");
 
             await permissionService.SetPermissionsAsync(
                 PrincipalType.User,
@@ -154,7 +161,7 @@ namespace NTech.KeyVault.Api.Services
 
             var application = await applicationRepository.GetApplicationByIdAsync(applicationId);
             if (application == null)
-                throw new ArgumentException("Application not found.");
+                throw new KeyNotFoundException("Application not found.");
 
             if (application.OwnerUserId != currentUser.Id)
                 throw new UnauthorizedAccessException("Only the owner can view user permissions.");
@@ -187,7 +194,7 @@ namespace NTech.KeyVault.Api.Services
 
             var application = await applicationRepository.GetApplicationByIdAsync(applicationId);
             if (application == null)
-                throw new ArgumentException("Application not found.");
+                throw new KeyNotFoundException("Application not found.");
 
             var isOwner = application.OwnerUserId == currentUser.Id;
             var isSelf = currentUser.Id == userId;
@@ -196,7 +203,7 @@ namespace NTech.KeyVault.Api.Services
 
             var user = await userService.GetUserById(userId.ToString());
             if (user == null)
-                throw new ArgumentException("User not found.");
+                throw new KeyNotFoundException("User not found.");
 
             var permissions = await permissionService.GetPrincipalsForResourceAsync(ResourceType.Application, applicationId);
             var userPermissions = permissions.Where(p => p.PrincipalType == PrincipalType.User && p.PrincipalId == userId)
@@ -224,7 +231,7 @@ namespace NTech.KeyVault.Api.Services
 
             var application = await applicationRepository.GetApplicationByIdAsync(applicationId);
             if (application == null)
-                throw new ArgumentException("Application not found.");
+                throw new KeyNotFoundException("Application not found.");
 
             var isOwner = application.OwnerUserId == currentUser.Id;
             if (!isOwner)

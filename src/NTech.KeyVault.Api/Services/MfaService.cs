@@ -23,12 +23,10 @@ namespace NTech.KeyVault.Api.Services
         public async Task<EnableMfaResponse> EnableMfaAsync(EnableMfaRequest dto)
         {
             var user = await userService.GetCurrentUserAsync();
-            if (user == null)
-                throw new UnauthorizedAccessException("User not authenticated.");
 
             var existingMfaMethod = await mfaRepository.GetMfaMethodAsync(user.Id, dto.MethodType);
             if (existingMfaMethod != null && existingMfaMethod.IsEnabled)
-                throw new ArgumentException("MFA method already enabled for this user.");
+                throw new InvalidOperationException("MFA method already enabled for this user.");
 
             switch (dto.MethodType)
             {
@@ -43,8 +41,6 @@ namespace NTech.KeyVault.Api.Services
         public async Task<byte[]> GenerateTotpQRCodeAsync()
         {
             var user = await userService.GetCurrentUserAsync();
-            if (user == null)
-                throw new UnauthorizedAccessException("User not authenticated.");
 
             var mfaMethod = await mfaRepository.GetMfaMethodAsync(user.Id, MfaMethodType.Totp);
             if (mfaMethod == null)
@@ -76,8 +72,6 @@ namespace NTech.KeyVault.Api.Services
         public async Task<VerifyTotpResponse> VerifyTotpAsync(VerifyTotpRequest dto)
         {
             var user = await userService.GetCurrentUserAsync();
-            if (user == null)
-                throw new UnauthorizedAccessException("User not authenticated.");
 
             var mfaMethod = await mfaRepository.GetMfaMethodAsync(user.Id, MfaMethodType.Totp);
             if (mfaMethod == null)
@@ -119,8 +113,6 @@ namespace NTech.KeyVault.Api.Services
         public async Task DisableMfaAsync(DisableMfaRequest dto)
         {
             var user = await userService.GetCurrentUserAsync();
-            if (user == null)
-                throw new UnauthorizedAccessException("User not authenticated.");
 
             var mfaMethod = await mfaRepository.GetMfaMethodAsync(user.Id, MfaMethodType.Totp);
             if (mfaMethod == null || !mfaMethod.IsEnabled)

@@ -4,6 +4,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using NTech.KeyVault.Api.Data;
 using NTech.KeyVault.Api.Extensions;
+using NTech.KeyVault.Api.Middlewares;
 using Swagger.Bootstrap;
 using System.Text;
 
@@ -110,6 +111,9 @@ namespace NTech.KeyVault.Api
             app.UseAntiforgery();
             app.UseAuthentication();
             app.UseAuthorization();
+
+            // Global exception handling middleware
+            app.UseMiddleware<ApiExceptionMiddleware>();
 
             app.MapControllers();
 

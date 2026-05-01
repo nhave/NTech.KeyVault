@@ -22,19 +22,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpPost("Create")]
         public async Task<ActionResult<DecryptedApplication>> CreateApplication(CreateApplicationRequest dto)
         {
-            try
-            {
-                var application = await applicationService.CreateApplicationAsync(dto);
-                return Ok(application);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var application = await applicationService.CreateApplicationAsync(dto);
+            return Ok(application);
         }
 
         /// <summary>
@@ -49,27 +38,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("GetDetails")]
         public async Task<ActionResult<DecryptedApplication>> GetApplicationDetails(Guid ApplicationId)
         {
-            try
-            {
-                var application = await applicationService.GetApplicationDetailsAsync(ApplicationId);
-                return Ok(application);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch(KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var application = await applicationService.GetApplicationDetailsAsync(ApplicationId);
+            return Ok(application);
         }
 
         /// <summary>
@@ -83,27 +53,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpDelete("Delete")]
         public async Task<ActionResult> DeleteApplication(Guid applicationId, string applicationName)
         {
-            try
-            {
-                await applicationService.DeleteApplicationAsync(applicationId, applicationName);
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            await applicationService.DeleteApplicationAsync(applicationId, applicationName);
+            return NoContent();
         }
 
         /// <summary>
@@ -114,15 +65,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("List")]
         public async Task<ActionResult<List<ApplicationResponse>>> GetAccessibleApplications()
         {
-            try
-            {
-                var applications = await applicationService.GetAccessibleApplicationsAsync();
-                return Ok(applications);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var applications = await applicationService.GetAccessibleApplicationsAsync();
+            return Ok(applications);
         }
 
         /// <summary>
@@ -139,24 +83,9 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpPost("SetUserPermissions")]
         public async Task<ActionResult> SetUserPermissions(SetUserPermissionsRequest dto)
         {
-            try
-            {
-                List<Permission> enumPermissions = PermissionHelper.Parse(ResourceType.Application, dto.Permissions);
-                await applicationService.SetUserPermissionsAsync(dto.ApplicationId, dto.UserId, enumPermissions);
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            List<Permission> enumPermissions = PermissionHelper.Parse(ResourceType.Application, dto.Permissions);
+            await applicationService.SetUserPermissionsAsync(dto.ApplicationId, dto.UserId, enumPermissions);
+            return NoContent();
         }
 
         /// <summary>
@@ -172,23 +101,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("GetUserPermissions")]
         public async Task<ActionResult<List<string>>> GetUserPermissions(Guid applicationId, Guid userId)
         {
-            try
-            {
-                var response = await applicationService.GetUserPermissionsAsync(applicationId, userId);
-                return Ok(response.Permissions);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var response = await applicationService.GetUserPermissionsAsync(applicationId, userId);
+            return Ok(response.Permissions);
         }
 
         /// <summary>
@@ -204,23 +118,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("GetUsers")]
         public async Task<ActionResult<ApplicationUsersResponse>> GetApplicationUsers(Guid applicationId)
         {
-            try
-            {
-                var response = await applicationService.GetApplicationUsersAsync(applicationId);
-                return Ok(response);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var response = await applicationService.GetApplicationUsersAsync(applicationId);
+            return Ok(response);
         }
 
         /// <summary>
@@ -236,23 +135,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpDelete("RemoveUserPermissions")]
         public async Task<ActionResult> RemoveUserPermissions(Guid applicationId, Guid userId)
         {
-            try
-            {
-                await applicationService.RemoveUserPermissionsAsync(applicationId, userId);
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            await applicationService.RemoveUserPermissionsAsync(applicationId, userId);
+            return NoContent();
         }
     }
 }

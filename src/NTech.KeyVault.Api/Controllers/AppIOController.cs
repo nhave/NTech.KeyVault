@@ -11,27 +11,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("Validate")]
         public async Task<ActionResult<SimpleApplicationResponse>> Validate([FromHeader] string ApplicationId, [FromHeader] string ApplicationSecret)
         {
-            try
-            {
-                var result = await iOService.ValidateAsync(ApplicationId, ApplicationSecret);
-                return Ok(result);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500);
-            }
+            var result = await iOService.ValidateAsync(ApplicationId, ApplicationSecret);
+            return Ok(result);
         }
 
         [HttpGet("Config")]

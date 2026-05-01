@@ -20,23 +20,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpPost]
         public async Task<ActionResult> SetOrCreateAppConfiguration(CreateAppConfigurationRequest dto)
         {
-            try
-            {
-                await configurationService.AddOrUpdateAsync(dto.ApplicationId, dto.ConfigurationData);
-                return Ok();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            await configurationService.AddOrUpdateAsync(dto.ApplicationId, dto.ConfigurationData);
+            return Ok();
         }
 
         /// <summary>
@@ -51,23 +36,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("{appId}")]
         public async Task<ActionResult<ApplicationConfigurationResponse>> GetAppConfiguration(Guid appId)
         {
-            try
-            {
-                var config = await configurationService.GetByAppIdAsync(appId);
-                return Ok(config);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var config = await configurationService.GetByAppIdAsync(appId);
+            return Ok(config);
         }
 
         /// <summary>
@@ -80,23 +50,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("{appId}/versions")]
         public async Task<ActionResult<List<int>>> GetAppConfigurationVersions(Guid appId)
         {
-            try
-            {
-                var versions = await configurationService.GetAllVersionsByAppIdAsync(appId);
-                return Ok(versions);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var versions = await configurationService.GetAllVersionsByAppIdAsync(appId);
+            return Ok(versions);
         }
 
         /// <summary>
@@ -110,23 +65,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpGet("{appId}/versions/{version}")]
         public async Task<ActionResult<ApplicationConfigurationResponse>> GetAppConfigurationByVersion(Guid appId, int version)
         {
-            try
-            {
-                var config = await configurationService.GetByAppIdAndVersionAsync(appId, version);
-                return Ok(config);
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var config = await configurationService.GetByAppIdAndVersionAsync(appId, version);
+            return Ok(config);
         }
 
         /// <summary>
@@ -139,23 +79,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpDelete("{appId}")]
         public async Task<ActionResult> DeleteAppConfiguration(Guid appId)
         {
-            try
-            {
-                await configurationService.DeleteByAppIdAsync(appId);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            await configurationService.DeleteByAppIdAsync(appId);
+            return NoContent();
         }
 
         /// <summary>
@@ -169,23 +94,8 @@ namespace NTech.KeyVault.Api.Controllers
         [HttpDelete("{appId}/cleanup")]
         public async Task<ActionResult> CleanupOldConfigurations(Guid appId)
         {
-            try
-            {
-                await configurationService.CleanupOldConfigurations(appId);
-                return NoContent();
-            }
-            catch (KeyNotFoundException ex)
-            {
-                return NotFound(ex.Message);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            await configurationService.CleanupOldConfigurations(appId);
+            return NoContent();
         }
     }
 }

@@ -19,13 +19,13 @@ namespace NTech.KeyVault.Api.Services
         {
             var user = await userService.GetUserByEmailOrUsername(dto.Username, q => q.Include(u => u.UserRoles));
             if (user == null)
-                throw new ArgumentException("Invalid email or password.");
+                throw new UnauthorizedAccessException("Invalid email or password.");
 
             if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-                throw new ArgumentException("Invalid email or password.");
+                throw new UnauthorizedAccessException("Invalid email or password.");
 
             if (user.IsDisabled)
-                throw new ArgumentException("User account is disabled.");
+                throw new UnauthorizedAccessException("User account is disabled.");
 
             var userInfo = userService.GetUserInfo(user);
             if (userInfo == null)
@@ -43,10 +43,10 @@ namespace NTech.KeyVault.Api.Services
             var ip = GetIpAddress();
 
             var user = await jwtService.ValidateRefreshTokenAsync(dto.RefreshToken, ip);
-            if (user == null) throw new ArgumentException("Invalid or expired refresh token.");
+            if (user == null) throw new UnauthorizedAccessException("Invalid or expired refresh token.");
 
             if (user.IsDisabled)
-                throw new ArgumentException("User account is disabled.");
+                throw new UnauthorizedAccessException("User account is disabled.");
 
             var userInfo = userService.GetUserInfo(user);
             if (userInfo == null)
@@ -67,7 +67,7 @@ namespace NTech.KeyVault.Api.Services
                 throw new Exception("Failed to get signed in user.");
 
             if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
-                throw new ArgumentException("Current password is incorrect.");
+                throw new UnauthorizedAccessException("Current password is incorrect.");
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
             await userService.UpdateUserAsync(user);
@@ -80,11 +80,11 @@ namespace NTech.KeyVault.Api.Services
                 throw new Exception("Failed to get signed in user.");
 
             if (!BCrypt.Net.BCrypt.Verify(dto.CurrentPassword, user.PasswordHash))
-                throw new ArgumentException("Current password is incorrect.");
+                throw new UnauthorizedAccessException("Current password is incorrect.");
 
             var lookupHash = userService.CreateLookupHash(dto.NewEmail.ToLowerInvariant());
             if (await userService.GetUserByEmail(lookupHash) != null)
-                throw new ArgumentException("Email is already in use.");
+                throw new UnauthorizedAccessException("Email is already in use.");
 
             user.EmailLookupHash = lookupHash;
             await userService.UpdateUserAsync(user);

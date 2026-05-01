@@ -7,7 +7,7 @@ using NTech.KeyVault.Common.Models.Dtos.Responses;
 namespace NTech.KeyVault.Api.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("[controller]"), Authorize]
     public class MfaController(IMfaService mfaService) : ControllerBase
     {
         /// <summary>
@@ -17,22 +17,11 @@ namespace NTech.KeyVault.Api.Controllers
         /// <returns>An ActionResult containing the result of the MFA enablement operation. Returns a successful response with
         /// details if MFA is enabled, a bad request if the input is invalid, or a 500 status code for unexpected
         /// errors.</returns>
-        [HttpPost("EnableMFA"), Authorize]
+        [HttpPost("EnableMFA")]
         public async Task<ActionResult<EnableMfaResponse>> EnableMfaAsync(EnableMfaRequest dto)
         {
-            try
-            {
-                var response = await mfaService.EnableMfaAsync(dto);
-                return Ok(response);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var response = await mfaService.EnableMfaAsync(dto);
+            return Ok(response);
         }
 
         /// <summary>
@@ -43,30 +32,16 @@ namespace NTech.KeyVault.Api.Controllers
         /// TOTP-based multi-factor authentication. The response is not cached to ensure security.</remarks>
         /// <returns>An image file containing the QR code in PNG format if successful; otherwise, an appropriate error response
         /// such as Unauthorized, BadRequest, or Internal Server Error.</returns>
-        [HttpGet("GenerateQRCode"), Authorize]
+        [HttpGet("GenerateQRCode")]
         public async Task<ActionResult> GenerateQRCode()
         {
-            try
-            {
-                Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
-                Response.Headers.Pragma = "no-cache";
-                Response.Headers.Expires = "0";
+            // Set cache control headers to prevent caching of the QR code response for security reasons
+            Response.Headers.CacheControl = "no-cache, no-store, must-revalidate";
+            Response.Headers.Pragma = "no-cache";
+            Response.Headers.Expires = "0";
 
-                var qrCodeBytes = await mfaService.GenerateTotpQRCodeAsync();
-                return File(qrCodeBytes, "image/png");
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var qrCodeBytes = await mfaService.GenerateTotpQRCodeAsync();
+            return File(qrCodeBytes, "image/png");
         }
 
         /// <summary>
@@ -78,30 +53,11 @@ namespace NTech.KeyVault.Api.Controllers
         /// <param name="dto">The request containing the TOTP code and related information required for verification.</param>
         /// <returns>An HTTP response containing the result of the TOTP verification. Returns a 200 OK response with verification
         /// details if successful; otherwise, returns an appropriate error response.</returns>
-        [HttpPost("VerifyTotp"), Authorize]
+        [HttpPost("VerifyTotp")]
         public async Task<ActionResult<VerifyTotpResponse>> VerifyTotp(VerifyTotpRequest dto)
         {
-            try
-            {
-                var response = await mfaService.VerifyTotpAsync(dto);
-                return Ok(response);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            var response = await mfaService.VerifyTotpAsync(dto);
+            return Ok(response);
         }
 
         /// <summary>
@@ -112,30 +68,11 @@ namespace NTech.KeyVault.Api.Controllers
         /// <returns>An HTTP response indicating the result of the operation. Returns 204 No Content if successful, 401
         /// Unauthorized if the user is not authorized, 400 Bad Request for invalid input or operation, or 500 Internal
         /// Server Error for unexpected failures.</returns>
-        [HttpPost("DisableMfa"), Authorize]
+        [HttpPost("DisableMfa")]
         public async Task<ActionResult> DisableMfa(DisableMfaRequest dto)
         {
-            try
-            {
-                await mfaService.DisableMfaAsync(dto);
-                return NoContent();
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(ex.Message);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch (InvalidOperationException ex)
-            {
-                return BadRequest(ex.Message);
-            }
-            catch
-            {
-                return StatusCode(500);
-            }
+            await mfaService.DisableMfaAsync(dto);
+            return NoContent();
         }
     }
 }
