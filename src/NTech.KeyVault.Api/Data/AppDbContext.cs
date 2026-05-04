@@ -19,6 +19,42 @@ namespace NTech.KeyVault.Api.Data
 
         public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
 
+        public override int SaveChanges()
+        {
+            AddTimestamps();
+            return base.SaveChanges();
+        }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            AddTimestamps();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        /// <summary>
+        /// Sets the creation and update timestamps for tracked entities that derive from Common.Models.Database.Common
+        /// when they are added or modified.
+        /// </summary>
+        /// <remarks>This method updates the CreatedAt property only when an entity is added, and always
+        /// updates the UpdatedAt property when an entity is added or modified. The timestamps are set to the current
+        /// UTC time. This ensures that timestamp fields are consistently maintained for auditing purposes.</remarks>
+        private void AddTimestamps()
+        {
+            var entities = ChangeTracker.Entries()
+                .Where(x => x.Entity is Common.Models.Database.Common && (x.State == EntityState.Added || x.State == EntityState.Modified));
+
+            foreach (var entity in entities)
+            {
+                var now = DateTime.UtcNow;
+
+                if (entity.State == EntityState.Added)
+                {
+                    ((Common.Models.Database.Common)entity.Entity).CreatedAt = now;
+                }
+                ((Common.Models.Database.Common)entity.Entity).UpdatedAt = now;
+            }
+        }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             base.OnConfiguring(optionsBuilder);
