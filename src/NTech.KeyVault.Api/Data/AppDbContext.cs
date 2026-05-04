@@ -15,7 +15,7 @@ namespace NTech.KeyVault.Api.Data
 
         public DbSet<Application> Applications { get; set; }
         public DbSet<AppConfiguration> AppConfigurations { get; set; }
-        public DbSet<VaultSecret> VaultSecrets { get; set; }
+        public DbSet<AppSecret> AppSecrets { get; set; }
 
         public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
 
@@ -150,11 +150,11 @@ namespace NTech.KeyVault.Api.Data
                 .HasForeignKey(ac => ac.CreatedById)
                 .OnDelete(DeleteBehavior.SetNull);
 
-            modelBuilder.Entity<VaultSecret>()
+            modelBuilder.Entity<AppSecret>()
                 .HasIndex(x => new { x.ApplicationId, x.Name })
                 .IsUnique();
 
-            modelBuilder.Entity<VaultSecret>()
+            modelBuilder.Entity<AppSecret>()
                 .HasOne(ac => ac.Application)
                 .WithMany()
                 .HasForeignKey(ac => ac.ApplicationId)

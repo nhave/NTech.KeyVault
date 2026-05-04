@@ -12,15 +12,15 @@ namespace NTech.KeyVault.Api.Services
 
     public class EncryptionResult
     {
-        public byte[] EncryptedValue { get; set; }
-        public byte[] EncryptedDataKey { get; set; }
-        public byte[] ValueNonce { get; set; }
-        public byte[] DataKeyNonce { get; set; }
+        public byte[] EncryptedValue { get; set; } = default!;
+        public byte[] EncryptedDataKey { get; set; } = default!;
+        public byte[] ValueNonce { get; set; } = default!;
+        public byte[] DataKeyNonce { get; set; } = default!;
     }
 
     public class DecryptionResult
     {
-        public byte[] Value { get; set; }
+        public byte[] Value { get; set; } = default!;
     }
 
     public class EncryptionService : IEncryptionService

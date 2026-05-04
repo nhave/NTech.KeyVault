@@ -11,7 +11,7 @@ namespace NTech.KeyVault.Api.Services
     public interface IApplicationService
     {
         public Task<DecryptedApplication> CreateApplicationAsync(CreateApplicationRequest dto);
-        public Task<DecryptedApplication?> GetApplicationDetailsAsync(Guid applicationId);
+        public Task<DecryptedApplication> GetApplicationDetailsAsync(Guid applicationId);
         public Task DeleteApplicationAsync(Guid applicationId, string applicationName);
         public Task<List<ApplicationResponse>> GetAccessibleApplicationsAsync();
         public Task SetUserPermissionsAsync(Guid applicationId, Guid userId, List<Permission> permissions);

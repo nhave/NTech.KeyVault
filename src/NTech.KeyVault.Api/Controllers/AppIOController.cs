@@ -66,7 +66,7 @@ namespace NTech.KeyVault.Api.Controllers
         /// <returns>A result indicating the outcome of the operation. Returns a 204 No Content response if the secret is set
         /// successfully.</returns>
         [HttpPost("Secret")]
-        public async Task<ActionResult> SetSecret([FromHeader] Guid ApplicationId, [FromHeader] string ApplicationSecret, [FromBody] SetVaultSecretRequest dto)
+        public async Task<ActionResult> SetSecret([FromHeader] Guid ApplicationId, [FromHeader] string ApplicationSecret, [FromBody] SetAppSecretRequest dto)
         {
             await iOService.ValidateAsync(ApplicationId, ApplicationSecret);
             await iOService.SetVaultSecretAsync(ApplicationId, dto.Name, dto.Value);

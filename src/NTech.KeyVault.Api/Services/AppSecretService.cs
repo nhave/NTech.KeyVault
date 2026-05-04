@@ -1,25 +1,23 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using NTech.KeyVault.Api.Repositories;
+﻿using NTech.KeyVault.Api.Repositories;
 using NTech.KeyVault.Common.Enums;
 using NTech.KeyVault.Common.Models.Database;
 using NTech.KeyVault.Common.Models.Dtos.Responses;
 using System.Text;
-using System.Xml.Linq;
 
 namespace NTech.KeyVault.Api.Services
 {
-    public interface IVaultSecretService
+    public interface IAppSecretService
     {
-        public Task<VaultSecretResponse> SetSecretAsync(Guid ApplicationId, string Name, string Value);
-        public Task<VaultSecretResponse> GetVaultSecretAsync(Guid applicationId, string name);
+        public Task<AppSecretResponse> SetSecretAsync(Guid ApplicationId, string Name, string Value);
+        public Task<AppSecretResponse> GetVaultSecretAsync(Guid applicationId, string name);
         public Task<string> GetSecretValueAsync(Guid secretId);
-        public Task<List<VaultSecretResponse>> GetVaultSecretsByApplicationIdAsync(Guid ApplicationId);
+        public Task<List<AppSecretResponse>> GetVaultSecretsByApplicationIdAsync(Guid ApplicationId);
         public Task DeleteVaultSecretAsync(Guid secretId, string name);
     }
 
-    public class VaultSecretService(IVaultSecretRepository secretRepository, IApplicationRepository applicationRepository, IEncryptionService encryptionService, IUserService userService, IPermissionService permissionService) : IVaultSecretService
+    public class AppSecretService(IAppSecretRepository secretRepository, IApplicationRepository applicationRepository, IEncryptionService encryptionService, IUserService userService, IPermissionService permissionService) : IAppSecretService
     {
-        public async Task<VaultSecretResponse> SetSecretAsync(Guid applicationId, string name, string value)
+        public async Task<AppSecretResponse> SetSecretAsync(Guid applicationId, string name, string value)
         {
             name = name.Trim().ToLower(); // Ensure consistent naming
 
@@ -38,7 +36,7 @@ namespace NTech.KeyVault.Api.Services
             var secret = await secretRepository.GetVaultSecretByNameAsync(applicationId, name);
             if (secret == null)
             {
-                secret = new VaultSecret
+                secret = new AppSecret
                 {
                     Id = Guid.NewGuid(),
                     ApplicationId = applicationId,
@@ -61,10 +59,10 @@ namespace NTech.KeyVault.Api.Services
                 await secretRepository.UpdateVaultSecretAsync(secret);
             }
 
-            return new VaultSecretResponse(application.Id, secret.Id, secret.Name, secret.CreatedAt, secret.UpdatedAt);
+            return new AppSecretResponse(application.Id, secret.Id, secret.Name, secret.CreatedAt, secret.UpdatedAt);
         }
 
-        public async Task<VaultSecretResponse> GetVaultSecretAsync(Guid applicationId, string name)
+        public async Task<AppSecretResponse> GetVaultSecretAsync(Guid applicationId, string name)
         {
             name = name.Trim().ToLower(); // Ensure consistent naming
 
@@ -81,7 +79,7 @@ namespace NTech.KeyVault.Api.Services
             var secret = await secretRepository.GetVaultSecretByNameAsync(applicationId, name)
                 ?? throw new KeyNotFoundException($"Secret with name {name} not found for application with ID {applicationId}.");
 
-            return new VaultSecretResponse(application.Id, secret.Id, secret.Name, secret.CreatedAt, secret.UpdatedAt);
+            return new AppSecretResponse(application.Id, secret.Id, secret.Name, secret.CreatedAt, secret.UpdatedAt);
         }
 
         public async Task<string> GetSecretValueAsync(Guid secretId)
@@ -102,7 +100,7 @@ namespace NTech.KeyVault.Api.Services
             return value;
         }
 
-        public async Task<List<VaultSecretResponse>> GetVaultSecretsByApplicationIdAsync(Guid ApplicationId)
+        public async Task<List<AppSecretResponse>> GetVaultSecretsByApplicationIdAsync(Guid ApplicationId)
         {
             var currentUser = await userService.GetCurrentUserAsync()
                 ?? throw new Exception("Current user not found.");
@@ -115,7 +113,7 @@ namespace NTech.KeyVault.Api.Services
                 throw new UnauthorizedAccessException("User does not have permission to view this application's secrets.");
 
             var secrets = await secretRepository.GetVaultSecretsByApplicationIdAsync(ApplicationId);
-            return secrets.Select(s => new VaultSecretResponse(s.ApplicationId, s.Id, s.Name, s.CreatedAt, s.UpdatedAt)).ToList();
+            return secrets.Select(s => new AppSecretResponse(s.ApplicationId, s.Id, s.Name, s.CreatedAt, s.UpdatedAt)).ToList();
         }
 
         public async Task DeleteVaultSecretAsync(Guid secretId, string name)

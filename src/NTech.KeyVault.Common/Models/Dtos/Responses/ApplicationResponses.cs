@@ -26,4 +26,6 @@
         public ApplicationConfigurationResponse(Guid ApplicationId)
             : this(ApplicationId, -1, null, null, new Dictionary<string, object>()) { }
     }
+
+    public record AppSecretResponse(Guid ApplicationId, Guid SecretId, string Name, DateTime CreatedAt, DateTime UpdatedAt);
 }

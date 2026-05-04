@@ -8,12 +8,12 @@ namespace NTech.KeyVault.Common.Models.Core
         /// <summary>
         /// Gets or sets the full name of the person.
         /// </summary>
-        public string FullName { get; set; }
+        public string FullName { get; set; } = default!;
 
         /// <summary>
         /// Gets or sets the email address associated with the user.
         /// </summary>
-        public string Email { get; set; }
+        public string Email { get; set; } = default!;
 
         /// <summary>
         /// Gets the abbreviated form of the full name.

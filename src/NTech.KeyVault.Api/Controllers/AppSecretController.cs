@@ -8,7 +8,7 @@ namespace NTech.KeyVault.Api.Controllers
 {
     [ApiController]
     [Route("[controller]"), Authorize]
-    public class VaultSecretController(IVaultSecretService secretService) : ControllerBase
+    public class AppSecretController(IAppSecretService secretService) : ControllerBase
     {
         /// <summary>
         /// Retrieves a secret associated with the specified application and secret name.
@@ -17,7 +17,7 @@ namespace NTech.KeyVault.Api.Controllers
         /// <param name="name">The name of the secret to retrieve. Cannot be null or empty.</param>
         /// <returns>An ActionResult containing the secret information for the specified application and name.</returns>
         [HttpGet("GetSecret")]
-        public async Task<ActionResult<VaultSecretResponse>> GetSecret(Guid applicationId, string name)
+        public async Task<ActionResult<AppSecretResponse>> GetSecret(Guid applicationId, string name)
         {
             var result = await secretService.GetVaultSecretAsync(applicationId, name);
             return Ok(result);
@@ -43,7 +43,7 @@ namespace NTech.KeyVault.Api.Controllers
         /// Cannot be null.</param>
         /// <returns>An ActionResult containing the response with details of the stored secret.</returns>
         [HttpPost("SetSecret")]
-        public async Task<ActionResult<VaultSecretResponse>> SetSecret(SetVaultSecretRequest dto)
+        public async Task<ActionResult<AppSecretResponse>> SetSecret(SetAppSecretRequest dto)
         {
             var result = await secretService.SetSecretAsync(dto.ApplicationId, dto.Name, dto.Value);
             return Ok(result);
@@ -56,7 +56,7 @@ namespace NTech.KeyVault.Api.Controllers
         /// <returns>A list of vault secret responses for the specified application. Returns an empty list if no secrets are
         /// found.</returns>
         [HttpGet("GetApplicationSecrets")]
-        public async Task<ActionResult<List<VaultSecretResponse>>> GetApplicationSecrets(Guid applicationId)
+        public async Task<ActionResult<List<AppSecretResponse>>> GetApplicationSecrets(Guid applicationId)
         {
             var result = await secretService.GetVaultSecretsByApplicationIdAsync(applicationId);
             return Ok(result);

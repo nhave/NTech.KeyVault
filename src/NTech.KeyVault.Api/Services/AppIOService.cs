@@ -1,9 +1,7 @@
 ﻿using NTech.KeyVault.Api.Repositories;
-using NTech.KeyVault.Common.Enums;
 using NTech.KeyVault.Common.Models.Database;
 using NTech.KeyVault.Common.Models.Dtos.Responses;
 using System.Text;
-using System.Xml.Linq;
 
 namespace NTech.KeyVault.Api.Services
 {
@@ -16,7 +14,7 @@ namespace NTech.KeyVault.Api.Services
         public Task DeleteVaultSecretAsync(Guid applicationId, Guid secretId);
     }
 
-    public class AppIOService(IApplicationRepository applicationRepository, IAppConfigurationService appConfigurationService, IVaultSecretRepository secretRepository, IEncryptionService encryptionService) : IAppIOService
+    public class AppIOService(IApplicationRepository applicationRepository, IAppConfigurationService appConfigurationService, IAppSecretRepository secretRepository, IEncryptionService encryptionService) : IAppIOService
     {
         public async Task<SimpleApplicationResponse> ValidateAsync(Guid applicationId, string applicationSecret)
         {
@@ -61,7 +59,7 @@ namespace NTech.KeyVault.Api.Services
             var secret = await secretRepository.GetVaultSecretByNameAsync(applicationId, name);
             if (secret == null)
             {
-                secret = new VaultSecret
+                secret = new AppSecret
                 {
                     Id = Guid.NewGuid(),
                     ApplicationId = applicationId,
