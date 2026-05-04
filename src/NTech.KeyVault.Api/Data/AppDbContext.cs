@@ -15,6 +15,7 @@ namespace NTech.KeyVault.Api.Data
 
         public DbSet<Application> Applications { get; set; }
         public DbSet<AppConfiguration> AppConfigurations { get; set; }
+        public DbSet<VaultSecret> VaultSecrets { get; set; }
 
         public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
 
@@ -96,7 +97,8 @@ namespace NTech.KeyVault.Api.Data
 
             // Configure unique index for the Application entity
             modelBuilder.Entity<AppConfiguration>()
-                .HasIndex(a => new { a.ApplicationId , a.Version });
+                .HasIndex(a => new { a.ApplicationId , a.Version })
+                .IsUnique();
 
             // Configure the relationship between AppConfiguration and Application with cascade delete
             modelBuilder.Entity<AppConfiguration>()
@@ -111,6 +113,16 @@ namespace NTech.KeyVault.Api.Data
                 .WithMany()
                 .HasForeignKey(ac => ac.CreatedById)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<VaultSecret>()
+                .HasIndex(x => new { x.ApplicationId, x.Name })
+                .IsUnique();
+
+            modelBuilder.Entity<VaultSecret>()
+                .HasOne(ac => ac.Application)
+                .WithMany()
+                .HasForeignKey(ac => ac.ApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure the PrincipalPermission entity
             // Configure the conversion for the PrincipalType enum to string
