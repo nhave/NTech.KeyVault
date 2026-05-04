@@ -1,15 +1,22 @@
 ﻿using NTech.KeyVault.Api.Repositories;
+using NTech.KeyVault.Common.Enums;
+using NTech.KeyVault.Common.Models.Database;
 using NTech.KeyVault.Common.Models.Dtos.Responses;
+using System.Text;
+using System.Xml.Linq;
 
 namespace NTech.KeyVault.Api.Services
 {
     public interface IAppIOService
     {
         public Task<SimpleApplicationResponse> ValidateAsync(Guid applicationId, string applicationSecret);
-        public Task<ApplicationConfigurationResponse> GetByAppIdAsync(Guid applicationId, string applicationSecret);
+        public Task<ApplicationConfigurationResponse> GetConfigurationByAppIdAsync(Guid applicationId);
+        public Task<string> GetVaultSecretValueAsync(Guid applicationId, string secretName);
+        public Task SetVaultSecretAsync(Guid applicationId, string name, string value);
+        public Task DeleteVaultSecretAsync(Guid applicationId, Guid secretId);
     }
 
-    public class AppIOService(IApplicationRepository applicationRepository, IAppConfigurationService appConfigurationService, IEncryptionService encryptionService) : IAppIOService
+    public class AppIOService(IApplicationRepository applicationRepository, IAppConfigurationService appConfigurationService, IVaultSecretRepository secretRepository, IEncryptionService encryptionService) : IAppIOService
     {
         public async Task<SimpleApplicationResponse> ValidateAsync(Guid applicationId, string applicationSecret)
         {
@@ -29,16 +36,64 @@ namespace NTech.KeyVault.Api.Services
             );
         }
 
-        public async Task<ApplicationConfigurationResponse> GetByAppIdAsync(Guid applicationId, string applicationSecret)
+        public async Task<ApplicationConfigurationResponse> GetConfigurationByAppIdAsync(Guid applicationId)
         {
-            var application = await applicationRepository.GetApplicationByIdAsync(applicationId)
-                ?? throw new KeyNotFoundException($"Application with ID {applicationId} not found.");
-
-            var providedSecretHash = encryptionService.CreateLookupHash(applicationSecret);
-            if (application.AppSecretHash != providedSecretHash)
-                throw new UnauthorizedAccessException("Invalid application secret.");
-
             return await appConfigurationService.GetByAppIdAsync(applicationId);
+        }
+
+        public async Task<string> GetVaultSecretValueAsync(Guid applicationId, string secretName)
+        {
+            var secret = await secretRepository.GetVaultSecretByNameAsync(applicationId, secretName)
+                ?? throw new KeyNotFoundException($"Secret with name {secretName} not found for application with ID {applicationId}.");
+
+            var decryptionResult = encryptionService.Decrypt(secret.EncryptedData, secret.EncryptedDataKey, secret.DataNonce, secret.DataKeyNonce);
+            var value = Encoding.UTF8.GetString(decryptionResult.Value);
+
+            return value;
+        }
+
+        public async Task SetVaultSecretAsync(Guid applicationId, string name, string value)
+        {
+            name = name.Trim().ToLower(); // Ensure consistent naming
+    
+            var encryptionResult = encryptionService.Encrypt(Encoding.UTF8.GetBytes(value));
+    
+            var secret = await secretRepository.GetVaultSecretByNameAsync(applicationId, name);
+            if (secret == null)
+            {
+                secret = new VaultSecret
+                {
+                    Id = Guid.NewGuid(),
+                    ApplicationId = applicationId,
+                    Name = name,
+                    EncryptedData = encryptionResult.EncryptedValue,
+                    DataNonce = encryptionResult.ValueNonce,
+                    EncryptedDataKey = encryptionResult.EncryptedDataKey,
+                    DataKeyNonce = encryptionResult.DataKeyNonce
+                };
+    
+                await secretRepository.CreateVaultSecretAsync(secret);
+            }
+            else
+            {
+                secret.EncryptedData = encryptionResult.EncryptedValue;
+                secret.DataNonce = encryptionResult.ValueNonce;
+                secret.EncryptedDataKey = encryptionResult.EncryptedDataKey;
+                secret.DataKeyNonce = encryptionResult.DataKeyNonce;
+    
+                await secretRepository.UpdateVaultSecretAsync(secret);
+            }
+        }
+
+        public async Task DeleteVaultSecretAsync(Guid applicationId, Guid secretId)
+        {
+            var secret = await secretRepository.GetVaultSecretByIdAsync(secretId)
+                ?? throw new KeyNotFoundException($"Secret with ID {secretId} not found.");
+
+            if (secret.ApplicationId != applicationId)
+                throw new UnauthorizedAccessException("Secret does not belong to the specified application.");
+
+            await secretRepository.DeleteVaultSecretAsync(secretId);
         }
     }
 }
