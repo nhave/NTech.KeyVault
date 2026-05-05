@@ -11,6 +11,20 @@ namespace NTech.KeyVault.Api.Controllers
     public class MfaController(IMfaService mfaService) : ControllerBase
     {
         /// <summary>
+        /// Retrieves the current multi-factor authentication (MFA) status for the authenticated user.
+        /// </summary>
+        /// <remarks>This endpoint requires the user to be authenticated. Use this method to determine
+        /// whether MFA is enabled or required for the current user session.</remarks>
+        /// <returns>An <see cref="ActionResult{T}"/> containing a <see cref="GetMfaStatusResponse"/> object with the user's MFA
+        /// status information.</returns>
+        [HttpGet("GetMfaStatus")]
+        public async Task<ActionResult<GetMfaStatusResponse>> GetMfaStatusAsync()
+        {
+            var response = await mfaService.GetMfaStatusAsync();
+            return Ok(response);
+        }
+
+        /// <summary>
         /// Enables multi-factor authentication (MFA) for a user account based on the provided request data.
         /// </summary>
         /// <param name="dto">An object containing the information required to enable MFA for the user. Cannot be null.</param>

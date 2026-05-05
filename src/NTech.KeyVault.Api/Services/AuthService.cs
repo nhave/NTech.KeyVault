@@ -13,7 +13,7 @@ namespace NTech.KeyVault.Api.Services
         public Task<MeResponse> GetMeResponseAsync();
     }
 
-    public class AuthService(IUserService userService, IJwtService jwtService, IHttpContextAccessor httpContextAccessor) : IAuthService
+    public class AuthService(IUserService userService, IJwtService jwtService, IHttpContextAccessor httpContextAccessor, IMfaService mfaService) : IAuthService
     {
         public async Task<LoginResponse> LoginAsync(LoginRequest dto)
         {
@@ -30,6 +30,28 @@ namespace NTech.KeyVault.Api.Services
             var userInfo = userService.GetUserInfo(user);
             if (userInfo == null)
                 throw new Exception("Failed to fetch User information.");
+
+            var activeMfaMethods = await mfaService.GetActiveMfaMethodsAsync(user.Id);
+            if (activeMfaMethods.Any())
+            {
+                if (dto.MfaMethod == null && dto.MfaCode == null)
+                {
+                    var mfaInfo = new MfaInfo(
+                        activeMfaMethods.Select(m => m.Method).ToList(),
+                        activeMfaMethods.First().Method
+                    );
+                    return new LoginResponse(IsMfaNeeded: true, MfaInfo: mfaInfo);
+                }
+
+                if (dto.MfaMethod == null)
+                    throw new UnauthorizedAccessException("MFA method required.");
+                if (dto.MfaCode == null)
+                    throw new UnauthorizedAccessException("MFA code required.");
+
+                var isValidMfa = await mfaService.ValidateMfaCodeAsync(user.Id, dto.MfaMethod.Value, dto.MfaCode);
+                if (!isValidMfa)
+                    throw new UnauthorizedAccessException("Invalid MFA code.");
+            }
 
             var ip = GetIpAddress();
 

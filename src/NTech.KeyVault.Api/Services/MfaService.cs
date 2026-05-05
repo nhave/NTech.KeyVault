@@ -16,6 +16,9 @@ namespace NTech.KeyVault.Api.Services
         public Task<byte[]> GenerateTotpQRCodeAsync();
         public Task<VerifyTotpResponse> VerifyTotpAsync(VerifyTotpRequest dto);
         public Task DisableMfaAsync(DisableMfaRequest dto);
+        public Task<List<UserMfaMethod>> GetActiveMfaMethodsAsync(Guid userId);
+        public Task<GetMfaStatusResponse> GetMfaStatusAsync();
+        public Task<bool> ValidateMfaCodeAsync(Guid userId, MfaMethodType methodType, string code);
     }
 
     public class MfaService(IMfaRepository mfaRepository, IUserService userService, IEncryptionService encryptionService) : IMfaService
@@ -128,6 +131,30 @@ namespace NTech.KeyVault.Api.Services
             }
         }
 
+        public async Task<List<UserMfaMethod>> GetActiveMfaMethodsAsync(Guid userId)
+        {
+            var user = await userService.GetUserById(userId.ToString())
+                ?? throw new KeyNotFoundException("User not found.");
+
+            return await mfaRepository.GetActiveMfaMethodsAsync(user.Id);
+        }
+
+        public async Task<GetMfaStatusResponse> GetMfaStatusAsync()
+        {
+            var user = await userService.GetCurrentUserAsync();
+
+            var activeMfaMethods = await GetActiveMfaMethodsAsync(user.Id);
+            if (activeMfaMethods.Count == 0)
+                return new GetMfaStatusResponse(IsMfaEnabled: false);
+
+            var mfaInfo = new MfaInfo(
+                activeMfaMethods.Select(m => m.Method).ToList(),
+                activeMfaMethods.First().Method
+            );
+
+            return new GetMfaStatusResponse(IsMfaEnabled: true, MfaInfo: mfaInfo);
+        }
+
         private async Task DisableTotpMethodAsync(User user, UserMfaMethod mfaMethod, string code)
         {
             var totpSecretBytes = encryptionService.Decrypt(
@@ -146,6 +173,28 @@ namespace NTech.KeyVault.Api.Services
                 return;
             }
             throw new ArgumentException("Invalid TOTP code. MFA method not disabled.");
+        }
+
+        public async Task<bool> ValidateMfaCodeAsync(Guid userId, MfaMethodType methodType, string code)
+        {
+            var mfaMethod = await mfaRepository.GetMfaMethodAsync(userId, methodType);
+            if (mfaMethod == null || !mfaMethod.IsEnabled)
+                return false;
+
+            switch (methodType)
+            {
+                case MfaMethodType.Totp:
+                    var totpSecretBytes = encryptionService.Decrypt(
+                        mfaMethod.EncryptedSecret,
+                        mfaMethod.EncryptedDataKey,
+                        mfaMethod.SecretNonce,
+                        mfaMethod.DataKeyNonce);
+                    var totpSecret = Encoding.UTF8.GetString(totpSecretBytes.Value);
+                    var totp = new Totp(Base32Encoding.ToBytes(totpSecret));
+                    return totp.VerifyTotp(code, out long timeStepMatched, new VerificationWindow(1, 1));
+                default:
+                    throw new NotSupportedException("Unsupported MFA method type.");
+            }
         }
 
         private async Task<string> CreateTotpMfaMethodAsync(User user)
