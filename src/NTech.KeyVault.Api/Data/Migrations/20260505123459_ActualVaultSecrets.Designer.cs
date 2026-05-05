@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NTech.KeyVault.Api.Data;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace NTech.KeyVault.Api.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260505123459_ActualVaultSecrets")]
+    partial class ActualVaultSecrets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -411,11 +414,15 @@ namespace NTech.KeyVault.Api.Data.Migrations
                         .IsRequired()
                         .HasColumnType("bytea");
 
-                    b.Property<byte[]>("EncryptedDataKey")
+                    b.Property<byte[]>("DataNonce")
                         .IsRequired()
                         .HasColumnType("bytea");
 
-                    b.Property<byte[]>("EncryptedValue")
+                    b.Property<byte[]>("EncryptedData")
+                        .IsRequired()
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("EncryptedDataKey")
                         .IsRequired()
                         .HasColumnType("bytea");
 
@@ -428,10 +435,6 @@ namespace NTech.KeyVault.Api.Data.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<byte[]>("ValueNonce")
-                        .IsRequired()
-                        .HasColumnType("bytea");
 
                     b.HasKey("Id");
 

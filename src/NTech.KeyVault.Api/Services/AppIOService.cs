@@ -9,9 +9,9 @@ namespace NTech.KeyVault.Api.Services
     {
         public Task<SimpleApplicationResponse> ValidateAsync(Guid applicationId, string applicationSecret);
         public Task<ApplicationConfigurationResponse> GetConfigurationByAppIdAsync(Guid applicationId);
-        public Task<string> GetVaultSecretValueAsync(Guid applicationId, string secretName);
-        public Task SetVaultSecretAsync(Guid applicationId, string name, string value);
-        public Task DeleteVaultSecretAsync(Guid applicationId, Guid secretId);
+        public Task<string> GetAppSecretValueAsync(Guid applicationId, string secretName);
+        public Task SetAppSecretAsync(Guid applicationId, string name, string value);
+        public Task DeleteAppSecretAsync(Guid applicationId, Guid secretId);
     }
 
     public class AppIOService(IApplicationRepository applicationRepository, IAppConfigurationService appConfigurationService, IAppSecretRepository secretRepository, IEncryptionService encryptionService) : IAppIOService
@@ -39,7 +39,7 @@ namespace NTech.KeyVault.Api.Services
             return await appConfigurationService.GetByAppIdAsync(applicationId);
         }
 
-        public async Task<string> GetVaultSecretValueAsync(Guid applicationId, string secretName)
+        public async Task<string> GetAppSecretValueAsync(Guid applicationId, string secretName)
         {
             var secret = await secretRepository.GetVaultSecretByNameAsync(applicationId, secretName)
                 ?? throw new KeyNotFoundException($"Secret with name {secretName} not found for application with ID {applicationId}.");
@@ -50,7 +50,7 @@ namespace NTech.KeyVault.Api.Services
             return value;
         }
 
-        public async Task SetVaultSecretAsync(Guid applicationId, string name, string value)
+        public async Task SetAppSecretAsync(Guid applicationId, string name, string value)
         {
             name = name.Trim().ToLower(); // Ensure consistent naming
     
@@ -83,7 +83,7 @@ namespace NTech.KeyVault.Api.Services
             }
         }
 
-        public async Task DeleteVaultSecretAsync(Guid applicationId, Guid secretId)
+        public async Task DeleteAppSecretAsync(Guid applicationId, Guid secretId)
         {
             var secret = await secretRepository.GetVaultSecretByIdAsync(secretId)
                 ?? throw new KeyNotFoundException($"Secret with ID {secretId} not found.");

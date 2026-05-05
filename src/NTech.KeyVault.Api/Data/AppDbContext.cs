@@ -16,6 +16,7 @@ namespace NTech.KeyVault.Api.Data
         public DbSet<Application> Applications { get; set; }
         public DbSet<AppConfiguration> AppConfigurations { get; set; }
         public DbSet<AppSecret> AppSecrets { get; set; }
+        public DbSet<VaultSecret> VaultSecrets { get; set; }
 
         public DbSet<PrincipalPermission> PrincipalPermissions { get; set; }
 
@@ -67,6 +68,7 @@ namespace NTech.KeyVault.Api.Data
         {
             base.OnModelCreating(modelBuilder);
 
+            #region UserEntity
             // Configure unique indexes for the User entity
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Id)
@@ -77,7 +79,9 @@ namespace NTech.KeyVault.Api.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.EmailLookupHash)
                 .IsUnique();
+            #endregion
 
+            #region RefreshTokenEntity
             // Configure indexes for the RefreshToken entity
             modelBuilder.Entity<RefreshToken>()
                 .HasIndex(rt => rt.Id)
@@ -101,7 +105,9 @@ namespace NTech.KeyVault.Api.Data
                 .HasForeignKey(t => t.ReplacedByTokenHash)
                 .HasPrincipalKey(t => t.TokenHash)
                 .OnDelete(DeleteBehavior.SetNull);
+            #endregion
 
+            #region UserRoleEntity
             // Configure relationships for the UserRole entity
             modelBuilder.Entity<UserRole>()
                 .HasOne(ur => ur.User)
@@ -112,7 +118,9 @@ namespace NTech.KeyVault.Api.Data
             modelBuilder.Entity<UserRole>()
                 .Property(u => u.Role)
                 .HasConversion<string>();
+            #endregion
 
+            #region UserMfaMethodEntity
             // Configure relationships for the UserMfaMethod entity
             modelBuilder.Entity<UserMfaMethod>()
                 .HasOne(mfa => mfa.User)
@@ -123,14 +131,18 @@ namespace NTech.KeyVault.Api.Data
             modelBuilder.Entity<UserMfaMethod>()
                 .Property(mfa => mfa.Method)
                 .HasConversion<string>();
+            #endregion
 
+            #region ApplicationEntity
             // Configure relationships for the Application entity
             modelBuilder.Entity<Application>()
                 .HasOne(a => a.OwnerUser)
                 .WithMany()
                 .HasForeignKey(a => a.OwnerUserId)
                 .OnDelete(DeleteBehavior.SetNull);
+            #endregion
 
+            #region AppConfigurationEntity
             // Configure unique index for the Application entity
             modelBuilder.Entity<AppConfiguration>()
                 .HasIndex(a => new { a.ApplicationId , a.Version })
@@ -149,17 +161,37 @@ namespace NTech.KeyVault.Api.Data
                 .WithMany()
                 .HasForeignKey(ac => ac.CreatedById)
                 .OnDelete(DeleteBehavior.SetNull);
+            #endregion
 
+            #region AppSecretEntity
+            // Configure unique index for the AppSecret entity to ensure one secret per application-name combination
             modelBuilder.Entity<AppSecret>()
                 .HasIndex(x => new { x.ApplicationId, x.Name })
                 .IsUnique();
 
+            // Configure the relationship between AppSecret and Application with cascade delete
             modelBuilder.Entity<AppSecret>()
                 .HasOne(ac => ac.Application)
                 .WithMany()
                 .HasForeignKey(ac => ac.ApplicationId)
                 .OnDelete(DeleteBehavior.Cascade);
+            #endregion
 
+            #region VaultSecretEntity
+            // Configure unique index for the VaultSecret entity to ensure one secret per application-entity combination
+            modelBuilder.Entity<VaultSecret>()
+                .HasIndex(x => new { x.ApplicationId, x.EntityId })
+                .IsUnique();
+
+            // Configure the relationship between VaultSecret and Application with cascade delete
+            modelBuilder.Entity<VaultSecret>()
+                .HasOne(ac => ac.Application)
+                .WithMany()
+                .HasForeignKey(ac => ac.ApplicationId)
+                .OnDelete(DeleteBehavior.Cascade);
+            #endregion
+
+            #region PrincipalPermissionEntity
             // Configure the PrincipalPermission entity
             // Configure the conversion for the PrincipalType enum to string
             modelBuilder.Entity<PrincipalPermission>()
@@ -191,6 +223,7 @@ namespace NTech.KeyVault.Api.Data
                         .ToList()
                 )
                 .Metadata.SetValueComparer(comparer);
+            #endregion
         }
     }
 }
