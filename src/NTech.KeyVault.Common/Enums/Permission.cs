@@ -92,7 +92,6 @@
             return result;
         }
 
-
         public static List<Permission> GetPermissionsFor(string prefix)
         {
             return Enum.GetValues(typeof(Permission))
