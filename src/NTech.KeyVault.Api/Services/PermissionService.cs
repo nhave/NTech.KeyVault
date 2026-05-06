@@ -79,7 +79,8 @@ namespace NTech.KeyVault.Api.Services
             return all
                 .SelectMany(p => p.Permissions)
                 .Distinct()
-                .ToList();
+                .ToList()
+                .ExpandPermissions();
         }
 
         public async Task<bool> HasPermissionAsync(
@@ -111,7 +112,7 @@ namespace NTech.KeyVault.Api.Services
                 PrincipalId = principalId,
                 ResourceType = resourceType,
                 ResourceId = resourceId,
-                Permissions = permissions
+                Permissions = permissions.ExpandPermissions()
             };
             await permissionRepository.AddOrUpdatePermissionsAsync(perm);
         }

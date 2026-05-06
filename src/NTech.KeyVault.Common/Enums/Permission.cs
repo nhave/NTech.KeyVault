@@ -1,6 +1,4 @@
-﻿using System.Security.AccessControl;
-
-namespace NTech.KeyVault.Common.Enums
+﻿namespace NTech.KeyVault.Common.Enums
 {
     public enum Permission
     {
@@ -11,6 +9,47 @@ namespace NTech.KeyVault.Common.Enums
         Application_Secret_Write,
         Team_UserManagement,
         Team_Settings_Read
+    }
+
+    public static class PermissionHierarchy
+    {
+        private static readonly IReadOnlyDictionary<Permission, Permission[]> _map =
+            new Dictionary<Permission, Permission[]>
+            {
+                { Permission.Application_Admin, new[] { Permission.Application_Config_Read, Permission.Application_Config_Write, Permission.Application_Secret_Read, Permission.Application_Secret_Write } },
+                { Permission.Application_Config_Read, Array.Empty<Permission>() },
+                { Permission.Application_Config_Write, new[] { Permission.Application_Config_Read } },
+                { Permission.Application_Secret_Read, Array.Empty<Permission>() },
+                { Permission.Application_Secret_Write, new[] { Permission.Application_Secret_Read } },
+                { Permission.Team_UserManagement, Array.Empty<Permission>() },
+                { Permission.Team_Settings_Read, Array.Empty<Permission>() }
+            }
+            .ToDictionary(k => k.Key, v => v.Value)
+            .AsReadOnly();
+
+        public static IEnumerable<Permission> Expand(Permission permission)
+        {
+            yield return permission;
+
+            if (_map.TryGetValue(permission, out var implied))
+            {
+                foreach (var r in implied)
+                    yield return r;
+            }
+        }
+    }
+
+    public static class PermissionExtensions
+    {
+        public static List<Permission> ExpandPermissions(this IEnumerable<Permission> permissions)
+        {
+            var expanded = permissions
+                .SelectMany(r => PermissionHierarchy.Expand(r))
+                .Distinct()
+                .ToList();
+
+            return expanded;
+        }
     }
 
     public static class PermissionHelper
