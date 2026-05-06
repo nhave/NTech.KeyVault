@@ -18,6 +18,14 @@ public class Program
         // Add device-specific services used by the NTech.KeyVault.Blazor.Shared project
         builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+        // Add services used by the NTech.KeyVault.Blazor.Shared project
+        builder.Services.AddSingleton<IUserContext, UserContext>();
+
+        // Add services used by the NTech.KeyVault.Blazor.Web project
+        builder.Services.AddSingleton<ITokenStore, TokenStore>();
+        builder.Services.AddSingleton<IAuthService, AuthService>();
+        builder.Services.AddSingleton<IActiveServerService, ActiveServerService>();
+
         var app = builder.Build();
 
         app.MapDefaultEndpoints();

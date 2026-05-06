@@ -3,6 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:local="clr-namespace:NTech.KeyVault.Blazor.Maui"
              xmlns:shared="clr-namespace:NTech.KeyVault.Blazor.Shared;assembly=NTech.KeyVault.Blazor.Shared"
+             SafeAreaEdges="All"
              x:Class="NTech.KeyVault.Blazor.Maui.MainPage"
              BackgroundColor="{DynamicResource PageBackgroundColor}">
 

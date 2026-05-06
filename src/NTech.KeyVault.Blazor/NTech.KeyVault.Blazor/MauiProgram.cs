@@ -19,6 +19,9 @@ public static class MauiProgram
         // Add device-specific services used by the NTech.KeyVault.Blazor.Shared project
         builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+        builder.Services.AddSingleton<IAuthService, AuthService>();
+        builder.Services.AddSingleton<IActiveServerService, ActiveServerService>();
+
         builder.Services.AddMauiBlazorWebView();
 
 #if DEBUG
