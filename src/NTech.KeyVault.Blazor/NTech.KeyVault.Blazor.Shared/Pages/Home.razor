@@ -1,17 +1,15 @@
 ﻿@page "/"
-@using NTech.KeyVault.Blazor.Shared.Services
-@inject IFormFactor FormFactor
-@inject IActiveServerService ActiveServerService
+@inject IUserContext UserContext
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app running on <em>@factor</em> using <em>@platform</em>.
-<p>Active server: <em>@activeServer</em></p>
+@* <p>@_user?.FullName</p> *@
 
 @code {
-    private string factor => FormFactor.GetFormFactor();
-    private string platform => FormFactor.GetPlatform();
-    private string? activeServer => ActiveServerService.GetActiveServer()?.Host;
+    private ClientUser? _user;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _user = await UserContext.GetCurrentUserAsync();
+    }
 }

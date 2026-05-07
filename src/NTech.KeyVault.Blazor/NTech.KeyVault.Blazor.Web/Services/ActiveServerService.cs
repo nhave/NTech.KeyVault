@@ -11,8 +11,8 @@ namespace NTech.KeyVault.Blazor.Web.Services
             return servers[0];
         }
 
-        public void SetActiveServer(ServerInfo server) { }
+        public async Task SetActiveServer(ServerInfo server) { }
 
-        public void ClearActiveServer() { }
+        public async Task ClearActiveServer() { }
     }
 }

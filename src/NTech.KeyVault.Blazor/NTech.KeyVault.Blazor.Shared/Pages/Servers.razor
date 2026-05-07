@@ -1,0 +1,14 @@
+﻿@page "/servers"
+@inject IUserContext UserContext
+@inject IFormFactor FormFactor
+
+@if (FormFactor.IsMobile)
+{
+    <PageTitle>Servers</PageTitle>
+
+    <ServerList />
+}
+else
+{
+    <NotFound />
+}

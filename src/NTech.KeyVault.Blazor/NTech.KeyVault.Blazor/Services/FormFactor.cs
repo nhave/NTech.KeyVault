@@ -4,6 +4,8 @@ namespace NTech.KeyVault.Blazor.Maui.Services;
 
 public class FormFactor : IFormFactor
 {
+    public bool IsMobile => true;
+
     public string GetFormFactor()
     {
         return DeviceInfo.Idiom.ToString();

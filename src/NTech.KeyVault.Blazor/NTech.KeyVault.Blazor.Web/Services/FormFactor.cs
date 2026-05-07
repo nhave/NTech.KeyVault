@@ -4,6 +4,8 @@ namespace NTech.KeyVault.Blazor.Web.Services;
 
 public class FormFactor : IFormFactor
 {
+    public bool IsMobile => false;
+
     public string GetFormFactor()
     {
         return "Web";

@@ -3,7 +3,7 @@ using NTech.KeyVault.Blazor.Shared.Models;
 using NTech.KeyVault.Common.Enums;
 using System.Security.Claims;
 
-namespace NTech.KeyVault.Blazor.Web.Services
+namespace NTech.KeyVault.Blazor.Shared.Services
 {
     public interface IUserContext
     {

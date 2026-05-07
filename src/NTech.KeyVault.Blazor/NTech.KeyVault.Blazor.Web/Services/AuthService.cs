@@ -14,7 +14,7 @@ namespace NTech.KeyVault.Blazor.Web.Services
         public ServerInfo AddServer(string name, string host)
             => _server; // Ignored in the Blazor Server
 
-        public void RemoveServer(string id)
+        public async Task RemoveServer(string id)
         {
             // Ignored – Blazor Server has only one server
         }

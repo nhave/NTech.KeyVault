@@ -4,7 +4,7 @@ using System.Text.Json;
 
 namespace NTech.KeyVault.Blazor.Maui.Services
 {
-    public class AuthService : IAuthService
+    public class AuthService(MauiAuthStateProvider authState) : IAuthService
     {
         private const string ServerListKey = "serverList";
 
@@ -37,7 +37,7 @@ namespace NTech.KeyVault.Blazor.Maui.Services
             Preferences.Set(ServerListKey, json);
         }
 
-        public void RemoveServer(string id)
+        public async Task RemoveServer(string id)
         {
             var list = LoadServers();
             var item = list.FirstOrDefault(x => x.Id == id);
@@ -50,6 +50,8 @@ namespace NTech.KeyVault.Blazor.Maui.Services
                 SecureStorage.Remove($"jwt_{id}");
                 SecureStorage.Remove($"refresh_{id}");
                 SecureStorage.Remove($"expiry_{id}");
+
+                await authState.SetToken(null);
             }
         }
 
@@ -58,6 +60,8 @@ namespace NTech.KeyVault.Blazor.Maui.Services
             await SecureStorage.SetAsync($"jwt_{serverId}", jwt);
             await SecureStorage.SetAsync($"refresh_{serverId}", refresh);
             await SecureStorage.SetAsync($"expiry_{serverId}", expiry.ToString("O"));
+
+            await authState.SetToken(jwt);
         }
 
         public async Task<(string Jwt, string Refresh, DateTime Expiry)> GetTokensAsync(string serverId)

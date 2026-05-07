@@ -3,7 +3,7 @@ using NTech.KeyVault.Blazor.Shared.Services;
 
 namespace NTech.KeyVault.Blazor.Maui.Services
 {
-    public class ActiveServerService(IAuthService authService) : IActiveServerService
+    public class ActiveServerService(IAuthService authService, MauiAuthStateProvider authState) : IActiveServerService
     {
         private const string ActiveServerKey = "activeServerId";
 
@@ -17,14 +17,23 @@ namespace NTech.KeyVault.Blazor.Maui.Services
             return servers.FirstOrDefault(s => s.Id == id);
         }
 
-        public void SetActiveServer(ServerInfo server)
+        public async Task SetActiveServer(ServerInfo server)
         {
             Preferences.Set(ActiveServerKey, server.Id);
+
+            // Hent token for denne server
+            var (jwt, _, _) = await authService.GetTokensAsync(server.Id);
+
+            // Opdater Blazor AuthenticationState
+            await authState.SetToken(jwt);
         }
 
-        public void ClearActiveServer()
+        public async Task ClearActiveServer()
         {
             Preferences.Remove(ActiveServerKey);
+
+            // Log brugeren ud i Blazor
+            await authState.SetToken(null);
         }
     }
 }

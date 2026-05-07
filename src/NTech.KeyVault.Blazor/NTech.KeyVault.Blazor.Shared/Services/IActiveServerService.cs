@@ -5,7 +5,7 @@ namespace NTech.KeyVault.Blazor.Shared.Services
     public interface IActiveServerService
     {
         public ServerInfo? GetActiveServer();
-        public void SetActiveServer(ServerInfo server);
-        public void ClearActiveServer();
+        public Task SetActiveServer(ServerInfo server);
+        public Task ClearActiveServer();
     }
 }

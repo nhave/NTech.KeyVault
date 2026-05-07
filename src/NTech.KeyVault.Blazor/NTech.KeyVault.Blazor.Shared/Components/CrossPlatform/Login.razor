@@ -1,0 +1,75 @@
+@inject IFormFactor FormFactor
+@inject LoginService LoginService
+
+<div class="row justify-content-center">
+    <div class="col-12 col-sm-10 col-md-8 col-lg-6">
+        <div class="card">
+            <h1 class="card-header">Login</h1>
+            <div class="card-body">
+                @if (FormFactor.IsMobile)
+                {
+                    <button class="btn btn-secondary mb-3" @onclick="HandleCancel">Back</button>
+                }
+                <div class="row g-3">
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="loginInputUsername" @bind-value="username" placeholder="">
+                            <label for="loginInputUsername" class="form-label">Username</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-floating">
+                            <input type="password" class="form-control" id="loginInputPassword" @bind-value="password" placeholder="">
+                            <label for="loginInputPassword" class="form-label">Password</label>
+                        </div>
+                    </div>
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="col">
+                            <span class="text-danger">@errorMessage</span>
+                        </div>
+                    }
+                    <div>
+                        <button class="btn btn-primary" @onclick="HandleLogin">Login</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnLoginSuccess { get; set; }
+    [Parameter] public EventCallback OnLoginCancel { get; set; }
+    [Parameter] public ServerInfo ServerInfo { get; set; } = new ServerInfo();
+
+    private string username = string.Empty;
+    private string password = string.Empty;
+    private string errorMessage = string.Empty;
+
+    private async Task HandleLogin()
+    {
+        try
+        {
+            LoginRequest request = new(username, password);
+
+            var response = await LoginService.LoginAsync(ServerInfo, request);
+
+            if (response.IsMfaNeeded)
+            {
+                return;
+            }
+
+            await OnLoginSuccess.InvokeAsync();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = ex.Message;
+        }
+    }
+
+    private async Task HandleCancel()
+    {
+        await OnLoginCancel.InvokeAsync();
+    }
+}

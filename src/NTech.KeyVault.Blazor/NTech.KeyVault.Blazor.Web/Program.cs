@@ -1,6 +1,7 @@
 using NTech.KeyVault.Blazor.Web.Components;
 using NTech.KeyVault.Blazor.Shared.Services;
 using NTech.KeyVault.Blazor.Web.Services;
+using NTech.KeyVault.Blazor.Web.Extensions;
 
 namespace NTech.KeyVault.Blazor;
 
@@ -18,11 +19,19 @@ public class Program
         // Add device-specific services used by the NTech.KeyVault.Blazor.Shared project
         builder.Services.AddSingleton<IFormFactor, FormFactor>();
 
+        // Add authentication services
+        builder.Services.AddAuthServices(builder.Configuration);
+
         // Add services used by the NTech.KeyVault.Blazor.Web project
-        builder.Services.AddSingleton<IUserContext, UserContext>();
-        builder.Services.AddSingleton<ITokenStore, TokenStore>();
-        builder.Services.AddSingleton<IAuthService, AuthService>();
-        builder.Services.AddSingleton<IActiveServerService, ActiveServerService>();
+        builder.Services.AddScoped<IUserContext, UserContext>();
+        builder.Services.AddScoped<LoginService>();
+
+        builder.Services.AddHttpClient("dynamic");
+        builder.Services.AddSingleton<ApiClientFactory>();
+
+        builder.Services.AddScoped<ITokenStore, TokenStore>();
+        builder.Services.AddScoped<IAuthService, AuthService>();
+        builder.Services.AddScoped<IActiveServerService, ActiveServerService>();
 
         var app = builder.Build();
 
@@ -40,6 +49,8 @@ public class Program
         app.UseHttpsRedirection();
 
         app.UseAntiforgery();
+        app.UseAuthentication();
+        app.UseAuthorization();
 
         app.MapStaticAssets();
         app.MapRazorComponents<App>()

@@ -1,0 +1,92 @@
+@if (isVisible)
+{
+    <div class="modal fade show" tabindex="-1" style="display: block;" aria-modal="true" role="dialog">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modal title</h5>
+                    <button type="button" class="btn-close" @onclick="HideAsync"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="serverInputName" @bind-value="serverName" placeholder="">
+                                <label for="serverInputName" class="form-label">Server Name</label>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="serverInputAddress" @bind-value="serverAddress" placeholder="">
+                                <label for="serverInputAddress" class="form-label">Server Address</label>
+                            </div>
+                        </div>
+                        <div>
+                            @if (!string.IsNullOrEmpty(errorMessage))
+                            {
+                                <div class="alert alert-danger" role="alert">
+                                    @errorMessage
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="HideAsync">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveAsync">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    [Parameter] public EventCallback<(string Name, string Host)> OnServerAdded { get; set; }
+
+    private bool isVisible = false;
+
+    private string serverName = string.Empty;
+    private string serverAddress = string.Empty;
+    private string errorMessage = string.Empty;
+
+    public async Task ShowAsync()
+    {
+        isVisible = true;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task HideAsync()
+    {
+        isVisible = false;
+        serverName = string.Empty;
+        serverAddress = string.Empty;
+        errorMessage = string.Empty;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public async Task SaveAsync()
+    {
+        if (string.IsNullOrWhiteSpace(serverName))
+        {
+            errorMessage = "Server name is required.";
+            return;
+        }
+        
+        if (string.IsNullOrWhiteSpace(serverAddress))
+        {
+            errorMessage = "Server address is required.";
+            return;
+        }
+
+        var validationResult = HostValidator.Validate(serverAddress);
+        if (!validationResult.IsValid)
+        {
+            errorMessage = "Invalid server address.";
+            return;
+        }
+
+        await OnServerAdded.InvokeAsync((serverName, validationResult.FullAddress));
+        await HideAsync();
+    }
+}

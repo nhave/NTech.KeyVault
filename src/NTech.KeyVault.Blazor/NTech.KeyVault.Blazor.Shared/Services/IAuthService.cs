@@ -6,7 +6,7 @@ namespace NTech.KeyVault.Blazor.Shared.Services
     {
         List<ServerInfo> LoadServers();
         ServerInfo AddServer(string name, string host);
-        void RemoveServer(string id);
+        Task RemoveServer(string id);
 
         Task<bool> HasTokensAsync(string serverId);
         Task SaveTokensAsync(string serverId, string jwt, string refresh, DateTime expiry);
