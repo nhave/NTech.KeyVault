@@ -14,10 +14,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\NTech.KeyVault.Api\NTech.KeyVault.Api.csproj" />
-	<ProjectReference Include="..\NTech.KeyVault.Blazor\NTech.KeyVault.Blazor.Web\NTech.KeyVault.Blazor.Web.csproj" />
-    <ProjectReference Include="..\NTech.KeyVault.Blazor\NTech.KeyVault.Blazor\NTech.KeyVault.Blazor.Maui.csproj">
-      <SetTargetFramework>TargetFramework=net10.0</SetTargetFramework>
-    </ProjectReference>
+    <ProjectReference Include="..\NTech.KeyVault.Frontend\NTech.KeyVault.Frontend.csproj" />
   </ItemGroup>
 
 

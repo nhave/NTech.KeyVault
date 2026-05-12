@@ -5,5 +5,5 @@
     public record UpdateApplicationRequest(Guid ApplicationId, string Name, string? Description = null);
     public record CreateAppConfigurationRequest(Guid ApplicationId, Dictionary<string, object> ConfigurationData);
     public record SetAppSecretRequest(Guid ApplicationId, string Name, string Value);
-    public record SetVaultSecretRequest(Guid ApplicationId, string SecretValue, DateTime ExpirationDate);
+    public record SetVaultSecretRequest(string SecretValue, DateTime ExpirationDate);
 }

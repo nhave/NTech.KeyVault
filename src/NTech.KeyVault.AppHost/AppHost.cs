@@ -18,16 +18,16 @@ var api = builder.AddProject<Projects.NTech_KeyVault_Api>("API")
     .WithIconName("CloudArrowUp");
 
 // Add the "ntech-keyvault-blazor-web" project to the application,
-var blazor = builder.AddProject<Projects.NTech_KeyVault_Blazor_Web>("Blazor-Web")
+var blazor = builder.AddProject<Projects.NTech_KeyVault_Frontend>("Blazor-Web")
     .WithReference(api)
     .WaitFor(api)
     .WithEnvironment("Api__Host", api.GetEndpoint("http"))
     .WithIconName("Globe");
 
 // Add the "ntech-keyvault-blazor-maui" project to the application,
-builder.AddProject<Projects.NTech_KeyVault_Blazor_Maui>("Blazor-MAUI")
-    .WithParentRelationship(blazor)
-    .WithExplicitStart()
-    .WithIconName("PhoneDesktop");
+//builder.AddProject<Projects.NTech_KeyVault_Blazor_Maui>("Blazor-MAUI")
+//    .WithParentRelationship(blazor)
+//    .WithExplicitStart()
+//    .WithIconName("PhoneDesktop");
 
 builder.Build().Run();
