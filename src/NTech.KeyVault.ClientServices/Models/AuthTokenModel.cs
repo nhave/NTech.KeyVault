@@ -1,4 +1,4 @@
-﻿namespace NTech.KeyVault.Frontend.Models
+﻿namespace NTech.KeyVault.ClientServices.Models
 {
     public class AuthTokenModel
     {

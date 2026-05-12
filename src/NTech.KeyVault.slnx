@@ -1,6 +1,7 @@
 <Solution>
   <Project Path="NTech.KeyVault.Api/NTech.KeyVault.Api.csproj" />
   <Project Path="NTech.KeyVault.AppHost/NTech.KeyVault.AppHost.csproj" Id="450f7867-764b-46d1-85ba-ffb54abceab8" />
+  <Project Path="NTech.KeyVault.ClientServices/NTech.KeyVault.ClientServices.csproj" Id="0d0f3eec-c168-4da6-8311-f97b9c606548" />
   <Project Path="NTech.KeyVault.Common/NTech.KeyVault.Common.csproj" Id="88a2301c-e7ad-4031-96fc-7926af538eb3" />
   <Project Path="NTech.KeyVault.Frontend/NTech.KeyVault.Frontend.csproj" />
   <Project Path="NTech.KeyVault.ServiceDefaults/NTech.KeyVault.ServiceDefaults.csproj" />

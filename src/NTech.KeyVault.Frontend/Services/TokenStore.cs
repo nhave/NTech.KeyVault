@@ -1,18 +1,12 @@
-﻿using NTech.KeyVault.Common.Models.Dtos.Requests;
+﻿using NTech.KeyVault.ClientServices.Abstractions;
+using NTech.KeyVault.Common.Models.Dtos.Requests;
 using System.Text.Json;
 
 namespace NTech.KeyVault.Frontend.Services
 {
-    public interface ITokenStore
+    public class TokenStore(HttpClient httpClient) : ITokenStore
     {
-        public Task<bool> SetAsync<T>(string entityId, T data);
-        public Task<T?> GetAsync<T>(string entityId);
-        public Task ClearAsync(string entityId);
-    }
-
-    public class TokenStore(IHttpClientFactory clientFactory) : ITokenStore
-    {
-        private readonly HttpClient _client = clientFactory.CreateClient("VaultApplication");
+        //private readonly HttpClient _client = clientFactory.CreateClient("VaultApplication");
 
         public async Task<bool> SetAsync<T>(string entityId, T data)
         {
@@ -21,13 +15,13 @@ namespace NTech.KeyVault.Frontend.Services
                 JsonSerializer.Serialize(data),
                 DateTime.UtcNow.AddDays(7)
             );
-            var response = await _client.PostAsJsonAsync($"appio/vaultsecret/{entityId}", request);
+            var response = await httpClient.PostAsJsonAsync($"appio/vaultsecret/{entityId}", request);
             return response.IsSuccessStatusCode;
         }
 
         public async Task<T?> GetAsync<T>(string entityId)
         {
-            var response = await _client.GetAsync($"appio/vaultsecret/{entityId}");
+            var response = await httpClient.GetAsync($"appio/vaultsecret/{entityId}");
             if (!response.IsSuccessStatusCode) return default;
 
             var content = await response.Content.ReadFromJsonAsync<T>() ?? default;
@@ -36,7 +30,7 @@ namespace NTech.KeyVault.Frontend.Services
 
         public async Task ClearAsync(string entityId)
         {
-            await _client.DeleteAsync($"appio/vaultsecret/{entityId}");
+            await httpClient.DeleteAsync($"appio/vaultsecret/{entityId}");
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using NTech.KeyVault.Frontend.Models;
+using NTech.KeyVault.ClientServices.Abstractions;
+using NTech.KeyVault.ClientServices.Models;
 using System.Security.Claims;
 
 namespace NTech.KeyVault.Frontend.Services

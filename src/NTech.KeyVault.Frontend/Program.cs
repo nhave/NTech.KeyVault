@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
+using NTech.KeyVault.ClientServices.Abstractions;
+using NTech.KeyVault.ClientServices.Services;
 using NTech.KeyVault.Frontend.Components;
 using NTech.KeyVault.Frontend.Services;
+using System.Buffers.Text;
 
 namespace NTech.KeyVault.Frontend;
 
@@ -35,27 +38,25 @@ public class Program
         // Add authorization services
         builder.Services.AddAuthorization();
 
+        // Get the API base address from configuration
         var apiBaseAddress = builder.Configuration["Api:Host"];
         if (string.IsNullOrEmpty(apiBaseAddress))
             throw new InvalidOperationException("API base address is not configured.");
 
-        builder.Services.AddScoped<ITokenStore, TokenStore>();
-
+        // Register HttpContextAccessor and TokenContext to allow the api services to access the current user's token
         builder.Services.AddHttpContextAccessor();
+        builder.Services.AddScoped<ITokenContext, BlazorTokenContext>();
 
-        builder.Services.AddTransient<TokenAuthorizationHandler>();
-        builder.Services.AddHttpClient("Api", client =>
-        {
-            client.BaseAddress = new Uri(apiBaseAddress);
-        })
-        .AddHttpMessageHandler<TokenAuthorizationHandler>();
-
+        // Register the VaultApplicationHandler and configure the HttpClient for ITokenStore to use it
         builder.Services.AddTransient<VaultApplicationHandler>();
-        builder.Services.AddHttpClient("VaultApplication", client =>
+        builder.Services.AddHttpClient<ITokenStore, TokenStore>(client =>
         {
             client.BaseAddress = new Uri(apiBaseAddress);
         })
         .AddHttpMessageHandler<VaultApplicationHandler>();
+
+        // Register API services with the base address
+        builder.Services.AddApiServices(apiBaseAddress);
 
         var app = builder.Build();
 

@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\NTech.KeyVault.Common\NTech.KeyVault.Common.csproj" />
+    <ProjectReference Include="..\NTech.KeyVault.ClientServices\NTech.KeyVault.ClientServices.csproj" />
     <ProjectReference Include="..\NTech.KeyVault.ServiceDefaults\NTech.KeyVault.ServiceDefaults.csproj" />
   </ItemGroup>
 
