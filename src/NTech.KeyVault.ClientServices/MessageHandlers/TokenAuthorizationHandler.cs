@@ -1,12 +1,11 @@
-﻿using Microsoft.Extensions.Configuration;
-using NTech.KeyVault.ClientServices.Abstractions;
+﻿using NTech.KeyVault.ClientServices.Abstractions;
 using NTech.KeyVault.ClientServices.Models;
 using NTech.KeyVault.Common.Models.Dtos.Requests;
 using NTech.KeyVault.Common.Models.Dtos.Responses;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 
-namespace NTech.KeyVault.ClientServices.MessageHendlers
+namespace NTech.KeyVault.ClientServices.MessageHandlers
 {
     public sealed class TokenAuthorizationHandler : DelegatingHandler
     {

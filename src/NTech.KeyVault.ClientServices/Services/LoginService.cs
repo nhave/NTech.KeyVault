@@ -1,4 +1,5 @@
-﻿using NTech.KeyVault.Common.Enums;
+﻿using NTech.KeyVault.ClientServices.Abstractions;
+using NTech.KeyVault.Common.Enums;
 using NTech.KeyVault.Common.Models.Dtos.Requests;
 using NTech.KeyVault.Common.Models.Dtos.Responses;
 using System.Net.Http.Json;
@@ -8,10 +9,12 @@ namespace NTech.KeyVault.ClientServices.Services
     public sealed class LoginService
     {
         private readonly HttpClient _auth;
+        private readonly IHostProvider _hostProvider;
 
-        public LoginService(IHttpClientFactory factory)
+        public LoginService(IHttpClientFactory factory, IHostProvider hostProvider)
         {
             _auth = factory.CreateClient("Auth");
+            _hostProvider = hostProvider;
         }
 
         /// <summary>
@@ -29,7 +32,8 @@ namespace NTech.KeyVault.ClientServices.Services
         /// authentication is successful; otherwise, null.</returns>
         public async Task<LoginResponse?> LoginAsync(string username, string password, MfaMethodType? MfaMethod, string? MfaCode)
         {
-            var resp = await _auth.PostAsJsonAsync("/auth/login",
+            var uri = await _hostProvider.BuildUri("/auth/login");
+            var resp = await _auth.PostAsJsonAsync(uri,
                 new LoginRequest
                 {
                     Username = username,
@@ -54,7 +58,8 @@ namespace NTech.KeyVault.ClientServices.Services
         /// with the new access token if the refresh is successful; otherwise, <see langword="null"/>.</returns>
         public async Task<LoginResponse?> RefreshAsync(string refreshToken)
         {
-            var resp = await _auth.PostAsJsonAsync("/auth/refresh",
+            var uri = await _hostProvider.BuildUri("/auth/refresh");
+            var resp = await _auth.PostAsJsonAsync(uri,
                 new RefreshTokenRequest(refreshToken));
 
             if (!resp.IsSuccessStatusCode)
