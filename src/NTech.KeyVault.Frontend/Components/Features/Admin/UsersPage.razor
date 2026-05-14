@@ -1,0 +1,39 @@
+﻿@page "/admin/users"
+
+<PageTitle>Users</PageTitle>
+
+<Card>
+    <CardHeader>
+        <h1>Users</h1>
+    </CardHeader>
+    <CardBody>
+
+        <Grid TItem="NTech.KeyVault.Common.Models.Dtos.Responses.AdminUserResponse"
+              Class="table table-hover table-bordered table-striped text-nowrap"
+              DataProvider="CustomersDataProvider"
+              AllowPaging="true"
+              Responsive="true"
+              PageSize="10"
+              PageSizeSelectorItems="new int[] { 5, 10, 20, 50 }"
+              PageSizeSelectorVisible="true">
+
+            <GridColumn TItem="NTech.KeyVault.Common.Models.Dtos.Responses.AdminUserResponse" HeaderText="Id" PropertyName="Id" SortString="Id" SortKeySelector="item => item.Id">
+                @context.Id
+            </GridColumn>
+            <GridColumn TItem="NTech.KeyVault.Common.Models.Dtos.Responses.AdminUserResponse" Class="w-100" HeaderText="Username" PropertyName="Username" SortString="Username" SortKeySelector="item => item.Username">
+                @context.Username
+            </GridColumn>
+        </Grid>
+
+    </CardBody>
+</Card>
+
+@code {
+    [Inject] public ClientServices.Services.ApiService ApiService { get; set; } = default!;
+
+    private async Task<GridDataProviderResult<NTech.KeyVault.Common.Models.Dtos.Responses.AdminUserResponse>> CustomersDataProvider(GridDataProviderRequest<NTech.KeyVault.Common.Models.Dtos.Responses.AdminUserResponse> request)
+    {
+        var result = await ApiService.ListUsersAsync(/* request.PageNumber, request.PageSize */);
+        return await Task.FromResult(new GridDataProviderResult<NTech.KeyVault.Common.Models.Dtos.Responses.AdminUserResponse> { Data = result, TotalCount = result.Count });
+    }
+}

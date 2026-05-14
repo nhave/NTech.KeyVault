@@ -69,6 +69,13 @@ namespace NTech.KeyVault.Api.Controllers
             return Ok(applications);
         }
 
+        [HttpGet("Get")]
+        public async Task<ActionResult<ApplicationResponse>> GetApplication(Guid applicationId)
+        {
+            var application = await applicationService.GetApplicationByIdAsync(applicationId);
+            return Ok(application);
+        }
+
         /// <summary>
         /// Sets the specified permissions for a user within an application.
         /// </summary>

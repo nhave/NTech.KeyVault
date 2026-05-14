@@ -21,7 +21,7 @@ var api = builder.AddProject<Projects.NTech_KeyVault_Api>("API")
 var blazor = builder.AddProject<Projects.NTech_KeyVault_Frontend>("Blazor-Web")
     .WithReference(api)
     .WaitFor(api)
-    .WithEnvironment("Api__BaseUrl", api.GetEndpoint("http"))
+    .WithEnvironment("Api__BaseUrl", api.GetEndpoint("https"))
     .WithIconName("Globe");
 
 // Add the "ntech-keyvault-blazor-maui" project to the application,

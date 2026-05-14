@@ -1,5 +1,5 @@
 ﻿export async function SignIn(dotNetReference, loginModel) {
-    try {
+    /*try {*/
         const url = new URL(window.location.href);
 
         const response = await fetch("/auth/login", {
@@ -17,16 +17,16 @@
 
             if (result.success) {
                 dotNetReference.invokeMethodAsync("HandleLoginSuccess");
-            } else if (result.isMfaNeeded) {
-                dotNetReference.invokeMethodAsync("HandleMFARequired");
+            } else if (result.isMfaRequired) {
+                dotNetReference.invokeMethodAsync("HandleMFARequired", result.mfaInfo);
             } else {
                 dotNetReference.invokeMethodAsync("HandleLoginFailed", result.errorMessage);
             }
         }
-    }
-    catch {
-        dotNetReference.invokeMethodAsync("HandleLoginFailed", "Login has failed.");
-    }
+    //}
+    //catch {
+    //    dotNetReference.invokeMethodAsync("HandleLoginFailed", "Login has failed.");
+    //}
 }
 
 export async function Refresh() {

@@ -12,15 +12,18 @@ namespace NTech.KeyVault.ClientServices.MessageHandlers
         private readonly ITokenContext _context;
         private readonly ITokenStore _tokenStore;
         private readonly IHttpClientFactory _clientFactory;
+        private readonly IHostProvider _hostProvider;
 
         public TokenAuthorizationHandler(
             ITokenContext context,
             ITokenStore tokenStore,
-            IHttpClientFactory clientFactory)
+            IHttpClientFactory clientFactory,
+            IHostProvider hostProvider)
         {
             _context = context;
             _tokenStore = tokenStore;
             _clientFactory = clientFactory;
+            _hostProvider = hostProvider;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -45,8 +48,9 @@ namespace NTech.KeyVault.ClientServices.MessageHandlers
                 {
                     var refreshClient = _clientFactory.CreateClient("Auth");
 
+                    var uri = await _hostProvider.BuildUri("/auth/refresh");
                     var resp = await refreshClient.PostAsJsonAsync(
-                        "/auth/refresh",
+                        uri,
                         new RefreshTokenRequest(model.RefreshToken),
                         ct);
 
@@ -72,7 +76,8 @@ namespace NTech.KeyVault.ClientServices.MessageHandlers
             request.Headers.Authorization =
                 new AuthenticationHeaderValue("Bearer", model.JwtToken);
 
-            return await base.SendAsync(request, ct);
+            var res = await base.SendAsync(request, ct);
+            return res;
         }
     }
 

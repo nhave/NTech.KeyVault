@@ -1,0 +1,55 @@
+﻿@using NTech.KeyVault.ClientServices.Services
+@using NTech.KeyVault.Common.Models.Core
+@using System.Text.Json
+
+<Modal @ref="modal" Title="Details" OnShowing="OnModalShowing" OnHidden="OnModalHidden" Size="ModalSize.Large">
+    <BodyTemplate>
+        @if (applicationDetails == null)
+        {
+            <div class="d-flex justify-content-center py-5">
+                <span>Loading...</span>
+            </div>
+        }
+        else
+        {
+            <pre class="border rounded bg-body-tertiary p-3 m-0">
+                @applicationDetails
+            </pre>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Secondary" Type="ButtonType.Button" @onclick="HideAsync">
+            Close
+        </Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+    [Inject] ApiService ApiService { get; set; } = default!;
+    [Parameter] public string ApplicationId { get; set; } = default!;
+
+    private Modal modal = default!;
+
+    private string? applicationDetails;
+
+    private async Task OnModalShowing()
+    {
+        var application = await ApiService.GetApplicationDetailsAsync(Guid.Parse(ApplicationId));
+        applicationDetails = JsonSerializer.Serialize(application, new JsonSerializerOptions { WriteIndented = true });
+    }
+
+    private async Task OnModalHidden()
+    {
+        applicationDetails = null;
+    }
+
+    public async Task ShowAsync()
+    {
+        await modal.ShowAsync();
+    }
+
+    public async Task HideAsync()
+    {
+        await modal.HideAsync();
+    }
+}

@@ -18,13 +18,9 @@ namespace NTech.KeyVault.Frontend.Controllers
         [HttpPost("Login")]
         public async Task<ActionResult<LoginUiResponse>> Login(LoginRequest dto)
         {
-            //var response = await loginService.LoginAsync;
-            //string responseContent = await response.Content.ReadAsStringAsync();
-            //if (!response.IsSuccessStatusCode) return Ok(new LoginUiResponse(false, false, responseContent));
-
             var payload = await loginService.LoginAsync(dto.Username, dto.Password, dto.MfaMethod, dto.MfaCode);
-            if (payload == null) return Ok(new LoginUiResponse(false, false, "Login has failed."));
-            if (payload.IsMfaNeeded) return Ok(new LoginUiResponse(false, true));
+            if (payload == null) return Ok(new LoginUiResponse(false, false, ErrorMessage: "Login has failed."));
+            if (payload.IsMfaNeeded) return Ok(new LoginUiResponse(false, true, MfaInfo: payload.MfaInfo));
 
             // Create claims from the JWT token and sign in the user with cookie authentication.
             var claimsIdentity = new ClaimsIdentity(ParseClaimsFromJwt(payload.JwtToken!), CookieAuthenticationDefaults.AuthenticationScheme);
@@ -44,7 +40,7 @@ namespace NTech.KeyVault.Frontend.Controllers
             if (!await tokenStore.SetAsync(entityId, new AuthTokenModel
             {
                 JwtToken = payload.JwtToken!,
-                ExpiresAt = DateTime.UtcNow.AddDays(7),
+                ExpiresAt = DateTime.UtcNow.AddSeconds(payload.ExpiresIn),
                 RefreshToken = payload.RefreshToken
             }))
                 return Ok(new LoginUiResponse(false, false));

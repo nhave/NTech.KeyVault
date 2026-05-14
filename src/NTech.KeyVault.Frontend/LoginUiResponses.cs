@@ -1,4 +1,6 @@
-﻿namespace NTech.KeyVault.Frontend
+﻿using NTech.KeyVault.Common.Models.Dtos.Responses;
+
+namespace NTech.KeyVault.Frontend
 {
-    public record LoginUiResponse(bool Success, bool IsMfaRequired, string ErrorMessage = "");
+    public record LoginUiResponse(bool Success, bool IsMfaRequired, MfaInfo? MfaInfo = null, string ErrorMessage = "");
 }

@@ -1,0 +1,40 @@
+﻿@page "/applications"
+@attribute [Authorize]
+
+<PageTitle>Applications</PageTitle>
+
+<Card>
+    <CardHeader>
+        <h1>Applications</h1>
+    </CardHeader>
+    <CardBody>
+        <div class="row justify-content-end g-3">
+            <div class="col-auto">
+                <div class="btn-group" role="group">
+                    <Button Color="ButtonColor.Primary" @onclick="() => createModal.ShowAsync()">
+                        Create Application
+                    </Button>
+                </div>
+            </div>
+            <div class="col-12">
+                <div class="list-group">
+                    @if (applications == null)
+                    {
+                        <p>Loading...</p>
+                    }
+                    else
+                    {
+                        @foreach (var application in applications)
+                        {
+                            <div class="list-group-item list-group-item-action" @onclick="() => NavigateToApplication(application.Id.ToString())">
+                                @application.Name
+                            </div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+    </CardBody>
+</Card>
+
+<CreateModal @ref="createModal" OnApplicationCreated="HandleApplicationCreated" />

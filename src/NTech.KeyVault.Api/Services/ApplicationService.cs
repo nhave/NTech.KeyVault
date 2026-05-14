@@ -14,6 +14,7 @@ namespace NTech.KeyVault.Api.Services
         public Task<DecryptedApplication> GetApplicationDetailsAsync(Guid applicationId);
         public Task DeleteApplicationAsync(Guid applicationId, string applicationName);
         public Task<List<ApplicationResponse>> GetAccessibleApplicationsAsync();
+        public Task<ApplicationResponse> GetApplicationByIdAsync(Guid applicationId);
         public Task SetUserPermissionsAsync(Guid applicationId, Guid userId, List<Permission> permissions);
         public Task<ApplicationUserResponse> GetUserPermissionsAsync(Guid applicationId, Guid userId);
         public Task<ApplicationUsersResponse> GetApplicationUsersAsync(Guid applicationId);
@@ -28,13 +29,13 @@ namespace NTech.KeyVault.Api.Services
             if (string.IsNullOrWhiteSpace(dto.Name)) throw new ArgumentNullException(nameof(dto.Name));
 
             // Normalize description to null if it's empty or whitespace
-            var description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description;
+            var description = string.IsNullOrWhiteSpace(dto.Description) ? null : dto.Description.Trim();
 
             var user = await userService.GetCurrentUserAsync();
             if (user == null)
                 throw new Exception("Failed to get signed in user.");
 
-            return await applicationRepository.CreateApplicationAsync(user.Id, dto.Name, dto.Description);
+            return await applicationRepository.CreateApplicationAsync(user.Id, dto.Name.Trim(), dto.Description);
         }
 
         public async Task<DecryptedApplication> GetApplicationDetailsAsync(Guid applicationId)
@@ -119,6 +120,39 @@ namespace NTech.KeyVault.Api.Services
                         .Select(p => p.ToString())
                         .ToList()
             )).ToList();
+        }
+
+        public async Task<ApplicationResponse> GetApplicationByIdAsync(Guid applicationId)
+        {
+            var application = await applicationRepository.GetApplicationByIdAsync(applicationId);
+            if (application == null)
+                throw new KeyNotFoundException("Application not found.");
+
+            var currentUser = await userService.GetCurrentUserAsync();
+            if (currentUser == null)
+                throw new Exception("Failed to get signed in user.");
+
+            var isOwner = application.OwnerUserId == currentUser.Id;
+
+            var principalPermissions = await permissionService.GetPrincipalsForUserAsync(currentUser.Id, ResourceType.Application);
+            var canAccess = isOwner || principalPermissions.Any(p => p.ResourceId == applicationId);
+            if (!canAccess)
+                throw new UnauthorizedAccessException("User does not have permission to access this application.");
+
+            return new ApplicationResponse
+            (
+                application.Id,
+                application.Name,
+                application.Description,
+                application.OwnerUserId,
+                application.OwnerUser?.Username,
+                application.OwnerUserId == currentUser.Id ? PermissionHelper.GetPermissionsForAsStrings(ResourceType.Application) :
+                    principalPermissions.Where(p => p.ResourceId == application.Id)
+                        .SelectMany(p => p.Permissions)
+                        .Where(p => PermissionHelper.IsValidPermissionFor(ResourceType.Application, p))
+                        .Select(p => p.ToString())
+                        .ToList()
+            );
         }
 
         public async Task SetUserPermissionsAsync(Guid applicationId, Guid userId, List<Permission> permissions)
