@@ -22,12 +22,14 @@ namespace NTech.KeyVault.Api.Data
 
         public override int SaveChanges()
         {
+            // Ensure timestamps are added before saving changes
             AddTimestamps();
             return base.SaveChanges();
         }
 
         public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
+            // Ensure timestamps are added before saving changes asynchronously
             AddTimestamps();
             return base.SaveChangesAsync(cancellationToken);
         }
@@ -41,9 +43,11 @@ namespace NTech.KeyVault.Api.Data
         /// UTC time. This ensures that timestamp fields are consistently maintained for auditing purposes.</remarks>
         private void AddTimestamps()
         {
+            // Get all tracked entities that are of type Common.Models.Database.Common and are either added or modified
             var entities = ChangeTracker.Entries()
                 .Where(x => x.Entity is Common.Models.Database.Common && (x.State == EntityState.Added || x.State == EntityState.Modified));
 
+            // Iterate through the filtered entities and set the CreatedAt and UpdatedAt timestamps accordingly
             foreach (var entity in entities)
             {
                 var now = DateTime.UtcNow;

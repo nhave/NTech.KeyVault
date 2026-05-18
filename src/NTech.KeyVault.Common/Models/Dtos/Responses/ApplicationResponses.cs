@@ -8,12 +8,11 @@
 
     public class ApplicationConfigurationResponse
     {
-        public Guid ApplicationId { get; }
-        public int Version { get; }
-        public Guid? CreatedById { get; }
-        public string? CreatedByUsername { get; }
-        public Dictionary<string, object> ConfigurationData { get; }
-
+        public Guid ApplicationId { get; set; }
+        public int Version { get; set; }
+        public Guid? CreatedById { get; set; }
+        public string? CreatedByUsername { get; set; }
+        public Dictionary<string, object> ConfigurationData { get; set; }
         public ApplicationConfigurationResponse(Guid ApplicationId, int Version, Guid? CreatedById, string? CreatedByUsername, Dictionary<string, object> ConfigurationData)
         {
             this.ApplicationId = ApplicationId;
@@ -25,6 +24,8 @@
 
         public ApplicationConfigurationResponse(Guid ApplicationId)
             : this(ApplicationId, -1, null, null, new Dictionary<string, object>()) { }
+
+        public ApplicationConfigurationResponse() : this(Guid.Empty) { }
     }
 
     public record AppSecretResponse(Guid ApplicationId, Guid SecretId, string Name, DateTime CreatedAt, DateTime UpdatedAt);

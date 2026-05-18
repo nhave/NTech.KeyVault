@@ -1,0 +1,152 @@
+﻿@page "/login"
+
+<PageTitle>Login</PageTitle>
+
+<AuthorizeView Context="AuthContext">
+	<Authorized>
+		@RedirectToHome()
+	</Authorized>
+	<NotAuthorized>
+		<div class="row justify-content-center">
+			<div class="col col-sm-8 col-md-7 col-lg-6 col-xl-5">
+				<EditForm Model="LoginModel" OnValidSubmit="HandleLogin">
+					<DataAnnotationsValidator />
+
+					<Card Class="shadow">
+						<CardHeader Class="d-flex flex-nowrap">
+							@if (isMfaRequired)
+							{
+								<button class="btn-icon me-2" type="button" @onclick="HandleReload">
+									<Icon Name="IconName.ArrowLeft" Size="IconSize.x2" Class="fw-bold" />
+								</button>
+							}
+							<h1>Login</h1>
+						</CardHeader>
+						<CardBody>
+							<div class="row row-cols-1 g-3">
+								@if (isMfaRequired)
+								{
+									<div class="col">
+										<div class="bg-body-tertiary border rounded-3 p-2">
+											Multi factor authentication
+										</div>
+									</div>
+									<div class="col">
+										<label for="loginInputMfaCode" class="form-label">Mfa Key</label>
+										<InputText class="form-control" @bind-Value="LoginModel.MfaCode" id="loginInputMfaCode" auto-complete="off" aria-autocomplete="none" />
+										<ValidationMessage For="@(() => LoginModel.MfaCode)" />
+									</div>
+								}
+								else
+								{
+									<div class="col">
+										<label for="loginInputUsername" class="form-label">Username or Email</label>
+										<InputText class="form-control" @bind-Value="LoginModel.Username" id="loginInputUsername" />
+										<ValidationMessage For="@(() => LoginModel.Username)" />
+									</div>
+									<div class="col">
+										<label for="loginInputPassword" class="form-label">Password</label>
+										<InputText class="form-control" type="password" @bind-Value="LoginModel.Password" id="loginInputPassword" />
+										<ValidationMessage For="@(() => LoginModel.Password)" />
+									</div>
+								}
+								@if (!string.IsNullOrEmpty(ErrorMessage))
+								{
+									<div class="col validation-message">@ErrorMessage</div>
+								}
+							</div>
+						</CardBody>
+						<CardFooter>
+							<div class="d-flex justify-content-center">
+								<Button Type="ButtonType.Submit"
+										Color="IsWorking ? ButtonColor.Secondary : ButtonColor.Primary"
+										Loading="IsWorking"
+										Disabled="IsWorking"
+										LoadingText="Logging in"
+										Style="width: 128px;">
+									Login
+								</Button>
+							</div>
+						</CardFooter>
+					</Card>
+
+				</EditForm>
+			</div>
+		</div>
+	</NotAuthorized>
+</AuthorizeView>
+
+@code {
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+
+    private Common.Models.Dtos.Requests.LoginRequest LoginModel = new();
+    private string? ErrorMessage = null;
+    private bool IsWorking = false;
+	private bool isMfaRequired = false;
+
+	protected override async Task OnAfterRenderAsync(bool firstRender)
+	{
+		if (!firstRender) return;
+        
+		await JSRuntime.InvokeVoidAsync("setFocus", "loginInputUsername").ConfigureAwait(false);
+	}
+
+    private async Task HandleLogin()
+    {
+        IsWorking = true;
+        ErrorMessage = null;
+
+        using var DotNetReference = DotNetObjectReference.Create(this);
+        var authModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/auth.js");
+        await authModule.InvokeVoidAsync("SignIn", DotNetReference, LoginModel);
+    }
+
+    private async Task HandleReload()
+    {
+        await JSRuntime.InvokeVoidAsync("location.reload");
+    }
+
+    [JSInvokable]
+    public async Task HandleLoginSuccess()
+    {
+        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+        var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+        var returnUrl = query.TryGetValue("ReturnUrl", out var url) ? url.ToString() : "/";
+
+        NavigationManager.NavigateTo(returnUrl, forceLoad: true);
+    }
+
+    [JSInvokable]
+    public async Task HandleMFARequired(Common.Models.Dtos.Responses.MfaInfo mfaInfo)
+    {
+		IsWorking = false;
+		ErrorMessage = "";
+		isMfaRequired = true;
+
+		LoginModel.MfaMethod = mfaInfo.DefaultMfaMethod;
+
+		await InvokeAsync(StateHasChanged);
+		await Task.Yield();
+		await JSRuntime.InvokeVoidAsync("setFocus", "loginInputMfaCode").ConfigureAwait(false);
+	}
+
+	[JSInvokable]
+	public async Task HandleLoginFailed(string message)
+	{
+		IsWorking = false;
+		ErrorMessage = message;
+		await InvokeAsync(StateHasChanged);
+	}
+
+	private RenderFragment RedirectToHome() => async builder =>
+	{
+		var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+		var query = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+		var returnUrl = query.TryGetValue("ReturnUrl", out var url) ? url.ToString() : "/";
+
+		_ = InvokeAsync(() =>
+			NavigationManager.NavigateTo(returnUrl, forceLoad: true, replace: true)
+		);
+	};
+}

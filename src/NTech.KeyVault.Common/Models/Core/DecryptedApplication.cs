@@ -1,7 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
-
-namespace NTech.KeyVault.Common.Models.Core
+﻿namespace NTech.KeyVault.Common.Models.Core
 {
     public class DecryptedApplication
     {

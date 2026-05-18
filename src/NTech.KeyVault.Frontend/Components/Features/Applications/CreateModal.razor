@@ -1,0 +1,100 @@
+﻿@using NTech.KeyVault.ClientServices.Services
+@using NTech.KeyVault.Common.Models.Dtos.Requests
+
+<EditForm EditContext="@editContext" OnValidSubmit="HandleOnValidSubmit">
+    <DataAnnotationsValidator />
+
+    <Modal @ref="modal" Title="Create Application"
+           UseStaticBackdrop="true"
+           IsVerticallyCentered="false"
+           OnShown="OnModalShown"
+           OnHidden="OnModalHidden">
+
+        <BodyTemplate>
+
+            <div class="row g-3">
+                <div class="col-12">
+                    <label for="appCreateNameInput" class="form-label">Name</label>
+                    <TextInput @bind-Value="@model.Name" Id="appCreateNameInput" Placeholder="Enter application name" />
+                    <ValidationMessage For="@(() => model.Name)" />
+                </div>
+                <div class="col-12">
+                    <label for="appCreateDescriptionInput" class="form-label">Description</label>
+                    <TextInput @bind-Value="@model.Description" Id="appCreateDescriptionInput" Placeholder="Enter application description" />
+                    <ValidationMessage For="@(() => model.Description)" />
+                </div>
+            </div>
+
+        </BodyTemplate>
+        <FooterTemplate>
+            <Button Color="ButtonColor.Primary"
+                    Type="ButtonType.Submit"
+                    Disabled="isSubmitting"
+                    Loading="isSubmitting"
+                    LoadingText="Creating...">
+                Create
+            </Button>
+            <Button Color="ButtonColor.Secondary" Type="ButtonType.Button" @onclick="HideAsync" Disabled="isSubmitting">
+                Cancel
+            </Button>
+        </FooterTemplate>
+    </Modal>
+
+</EditForm>
+
+@code {
+    [Inject] ApiService ApiService { get; set; } = default!;
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+
+    [Parameter] public EventCallback<string> OnApplicationCreated { get; set; }
+
+    private Modal modal = default!;
+
+    private CreateApplicationRequest model = new();
+    private EditContext? editContext;
+
+    private bool isSubmitting = false;
+
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(model);
+        base.OnInitialized();
+    }
+
+    private async Task HandleOnValidSubmit()
+    {
+        if (editContext!.Validate())
+        {
+            isSubmitting = true;
+            var app = await ApiService.CreateApplicationAsync(model);
+            if (app != null)
+            {
+                await OnApplicationCreated.InvokeAsync(app.Id.ToString());
+                await HideAsync();
+            }
+            isSubmitting = false;
+        }
+    }
+
+    private async Task OnModalShown()
+    {
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('appCreateNameInput').focus()");
+    }
+
+    private async Task OnModalHidden()
+    {
+        model = new CreateApplicationRequest();
+        editContext = new EditContext(model);
+        isSubmitting = false;
+    }
+
+    public async Task ShowAsync()
+    {
+        await modal.ShowAsync();
+    }
+
+    public async Task HideAsync()
+    {
+        await modal.HideAsync();
+    }
+}

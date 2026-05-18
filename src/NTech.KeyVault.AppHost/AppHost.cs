@@ -11,9 +11,23 @@ var database = postgres.AddDatabase("PostgresDb");
 
 // Add the "ntech-keyvault-api" project to the application,
 // specifying its reference to the database and its dependencies on the PostgreSQL service and the database.
-builder.AddProject<Projects.NTech_KeyVault_Api>("ntech-keyvault-api")
+var api = builder.AddProject<Projects.NTech_KeyVault_Api>("API")
     .WithReference(database)
     .WaitFor(postgres)
-    .WaitFor(database);
+    .WaitFor(database)
+    .WithIconName("CloudArrowUp");
+
+// Add the "ntech-keyvault-blazor-web" project to the application,
+var blazor = builder.AddProject<Projects.NTech_KeyVault_Frontend>("Blazor-Web")
+    .WithReference(api)
+    .WaitFor(api)
+    .WithEnvironment("Api__BaseUrl", api.GetEndpoint("https"))
+    .WithIconName("Globe");
+
+// Add the "ntech-keyvault-blazor-maui" project to the application,
+//builder.AddProject<Projects.NTech_KeyVault_Blazor_Maui>("Blazor-MAUI")
+//    .WithParentRelationship(blazor)
+//    .WithExplicitStart()
+//    .WithIconName("PhoneDesktop");
 
 builder.Build().Run();

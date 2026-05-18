@@ -24,6 +24,7 @@ namespace NTech.KeyVault.Api.Repositories
         {
             return await dbContext.RefreshTokens
                 .Include(rt => rt.User)
+                .ThenInclude(u => u.UserRoles)
                 .FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash);
         }
 

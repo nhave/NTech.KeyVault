@@ -1,0 +1,255 @@
+﻿@page "/applications/{Id}"
+@using NTech.KeyVault.ClientServices.Services
+@using NTech.KeyVault.Common.Enums
+@using NTech.KeyVault.Common.Models.Core
+@using NTech.KeyVault.Common.Models.Dtos.Responses
+@using System.Text.Json
+
+<PageTitle>Application</PageTitle>
+
+<Card>
+    <h1 class="card-header border-0 pb-0">
+        @if (application == null)
+        {
+            <span>Loading...</span>
+        }
+        else
+        {
+            <div class="row justify-content-between">
+                <div class="col-10">
+                    <span>@application.Name</span>
+                </div>
+                @if (userPermissions.Contains(Permission.Application_Admin))
+                {
+                    <div class="col-2 d-flex justify-content-end">
+                        <div class="dropdown">
+                            <button class="btn fs-3 p-0" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <Icon Name="IconName.ThreeDotsVertical" />
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><button class="dropdown-item" @onclick="() => detailsModal.ShowAsync()">View details</button></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><button class="dropdown-item text-danger" @onclick="() => deleteModal.ShowAsync()">Delete application</button></li>
+                            </ul>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </h1>
+
+    <div class="nav nav-tabs card-header pb-0">
+        <div class="av-item">
+            <button class="@GetTabClass(Tab.Details)" @onclick="() => SetTab(Tab.Details)">
+                Details
+            </button>
+        </div>
+        @if (userPermissions.Contains(Permission.Application_Config_Read))
+        {
+            <div class="av-item">
+                <button class="@GetTabClass(Tab.Config)" @onclick="() => SetTab(Tab.Config)">
+                    Configuration
+                </button>
+            </div>
+        }
+        @if (userPermissions.Contains(Permission.Application_Secret_Read))
+        {
+            <div class="av-item">
+                <button class="@GetTabClass(Tab.Secrets)" @onclick="() => SetTab(Tab.Secrets)">
+                    Secrets
+                </button>
+            </div>
+        }
+        @if (userPermissions.Contains(Permission.Application_Admin))
+        {
+            <div class="av-item">
+                <button class="@GetTabClass(Tab.Access)" @onclick="() => SetTab(Tab.Access)">
+                    Access
+                </button>
+            </div>
+        }
+    </div>
+
+    <CardBody>
+        @if (application == null)
+        {
+            <p>Loading...</p>
+        }
+        else if (activeTab == Tab.Details)
+        {
+            <div class="mb-3">
+                <strong>Name:</strong> @application.Name
+            </div>
+            <div class="mb-3">
+                <strong>Description:</strong> @application.Description
+            </div>
+            <div class="mb-3">
+                <strong>Owner User ID:</strong> @application.OwnerUserId
+            </div>
+            <div class="mb-3">
+                <strong>Owner User Name:</strong> @application.OwnerUsername
+            </div>
+            <div>
+                <strong>Permissions:</strong>
+                <ul>
+                    @foreach (var permission in userPermissions)
+                    {
+                        <li>@permission</li>
+                    }
+                </ul>
+            </div>
+        }
+        else if (activeTab == Tab.Config)
+        {
+            if (configuration != null)
+            {
+                <div class="mb-3">
+                    <strong>Created By:</strong> @configuration.CreatedByUsername
+                </div>
+                <div class="mb-3">
+                    <strong>Version:</strong> @configuration.Version
+                </div>
+                <div class="mb-3">
+                    <label for="appConfigInput" class="form-label">Configuration Data:</label>
+                    <TextAreaInput @bind-Value="configurationData"
+                                   Class="font-monospace"
+                                   Id="appConfigInput"
+                                   Style="white-space: pre; field-sizing: content; resize: none;"
+                                   Disabled="!configEditable" />
+
+                </div>
+                @if (userPermissions.Contains(Permission.Application_Config_Write))
+                {
+                    <div class="mb-3">
+                        @if (!configEditable)
+                        {
+                            <button class="btn btn-primary" @onclick="EditConfig">Edit</button>
+                        }
+                        else
+                        {
+                            <button class="btn btn-success me-2" @onclick="SaveConfig">Save</button>
+                            <button class="btn btn-secondary" @onclick="CancelEditConfig">Cancel</button>
+                        }
+                    </div>
+                }
+            }
+        }
+    </CardBody>
+</Card>
+
+@if (application != null && userPermissions.Contains(Permission.Application_Admin))
+{
+    <DetailsModal @ref="detailsModal" ApplicationId="@Id" />
+    <DeleteModal @ref="deleteModal" ApplicationId="@Id" ApplicationName="@application.Name" />
+}
+
+
+@code {
+    [Inject] ApiService ApiService { get; set; } = default!;
+    [Inject] IJSRuntime JSRuntime { get; set; } = default!;
+
+    [Parameter] public string Id { get; set; } = default!;
+
+    private DetailsModal detailsModal = default!;
+    private DeleteModal deleteModal = default!;
+
+    private ApplicationResponse? application;
+    private List<Permission> userPermissions = new();
+    private Tab activeTab = Tab.Details;
+
+    private ApplicationConfigurationResponse? configuration;
+    private string configurationData = string.Empty;
+    private bool configEditable = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Guid.TryParse(Id, out var applicationId))
+        {
+            application = await ApiService.GetApplicationByIdAsync(applicationId);
+            if (application != null)
+            {
+                userPermissions = PermissionHelper.Parse(ResourceType.Application, application.Permissions);
+                if (userPermissions.Contains(Permission.Application_Config_Read))
+                {
+                    configuration = await ApiService.GetApplicationConfigurationAsync(applicationId);
+                    if (configuration != null)
+                    {
+                        configurationData = SerializeWithEmptyLine(configuration.ConfigurationData);
+                    }
+                }
+            }
+        }
+    }
+
+    private string SerializeWithEmptyLine<T>(T value)
+    {
+        var json = JsonSerializer.Serialize(value, new JsonSerializerOptions
+        {
+            WriteIndented = true
+        });
+
+        if (json == "{}")
+            return "{\n\n}";
+
+        return json;
+    }
+
+    private async Task EditConfig()
+    {
+        configEditable = true;
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+        await JSRuntime.InvokeVoidAsync("eval", "document.getElementById('appConfigInput').focus()");
+    }
+
+    private async Task SaveConfig()
+    {
+        try
+        {
+            var updatedConfig = JsonSerializer.Deserialize<Dictionary<string, object>>(configurationData);
+            if (updatedConfig != null && configuration != null)
+            {
+                var applicationId = configuration.ApplicationId;
+                if (await ApiService.SetApplicationConfigurationAsync(applicationId, updatedConfig))
+                {
+                    configuration = await ApiService.GetApplicationConfigurationAsync(applicationId);
+                }
+            }
+            configEditable = false;
+            configurationData = SerializeWithEmptyLine(configuration!.ConfigurationData);
+            await InvokeAsync(StateHasChanged);
+        }
+        catch {}
+    }
+
+    private void CancelEditConfig()
+    {
+        configEditable = false;
+        if (configuration != null)
+        {
+            configurationData = SerializeWithEmptyLine(configuration.ConfigurationData);
+        }
+    }
+
+    private void SetTab(Tab tab)
+    {
+        activeTab = tab;
+        if (tab != Tab.Config)
+        {
+            CancelEditConfig();
+        }
+    }
+
+    private string GetTabClass(Tab tab)
+    {
+        return activeTab == tab ? "nav-link active" : "nav-link";
+    }
+
+    private enum Tab
+    {
+        Details,
+        Config,
+        Secrets,
+        Access
+    }
+}

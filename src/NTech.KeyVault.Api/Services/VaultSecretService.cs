@@ -57,8 +57,9 @@ namespace NTech.KeyVault.Api.Services
 
         public async Task<string?> GetVaultSecretAsync(Guid applicationId, string entityId)
         {
-            var vaultSecret = await vaultSecretRepository.GetVaultSecretByEntityIdAsync(applicationId, entityId)
-                ?? throw new KeyNotFoundException($"Vault secret with entity ID {entityId} not found for application with ID {applicationId}.");
+            var vaultSecret = await vaultSecretRepository.GetVaultSecretByEntityIdAsync(applicationId, entityId);
+            if (vaultSecret == null || vaultSecret.ExpirationDate <= DateTime.UtcNow)
+                throw new KeyNotFoundException($"Vault secret with entity ID {entityId} not found for application with ID {applicationId}.");
             
             var decryptionResult = encryptionService.Decrypt(
                 vaultSecret.EncryptedValue,

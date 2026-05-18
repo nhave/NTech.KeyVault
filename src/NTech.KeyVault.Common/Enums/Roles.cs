@@ -47,4 +47,38 @@ namespace NTech.KeyVault.Common.Enums
             return expanded;
         }
     }
+
+    public static class RoleHelper
+    {
+        private static readonly HashSet<string> _valid =
+            Enum.GetNames<Roles>()
+                .Select(n => n.ToLowerInvariant())
+                .ToHashSet();
+
+        /// <summary>
+        /// Parses a collection of string values into a list of valid roles, ignoring case.
+        /// </summary>
+        /// <remarks>Only values that match a valid role name, ignoring case, are included in the result.
+        /// Invalid or unrecognized values are ignored.</remarks>
+        /// <param name="values">An enumerable collection of strings representing role names to parse.</param>
+        /// <returns>A list of roles corresponding to the valid and recognized role names in the input collection. The list is
+        /// empty if no valid roles are found.</returns>
+        public static List<Roles> ParseMany(IEnumerable<string> values)
+        {
+            var result = new List<Roles>();
+
+            foreach (var value in values)
+            {
+                var key = value.ToLowerInvariant();
+
+                if (_valid.Contains(key) &&
+                    Enum.TryParse<Roles>(value, ignoreCase: true, out var role))
+                {
+                    result.Add(role);
+                }
+            }
+
+            return result;
+        }
+    }
 }

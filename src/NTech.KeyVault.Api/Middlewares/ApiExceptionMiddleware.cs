@@ -6,6 +6,7 @@ namespace NTech.KeyVault.Api.Middlewares
     {
         public async Task Invoke(HttpContext context)
         {
+            // The middleware catches any unhandled exceptions that occur during the processing of the request pipeline.
             try
             {
                 await next(context);
@@ -18,6 +19,7 @@ namespace NTech.KeyVault.Api.Middlewares
 
         private Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
+            // The middleware maps specific exception types to appropriate HTTP status codes and constructs a standardized error response using the Problem Details format.
             var status = ex switch
             {
                 ArgumentException => StatusCodes.Status400BadRequest,
@@ -28,6 +30,7 @@ namespace NTech.KeyVault.Api.Middlewares
                 _ => StatusCodes.Status500InternalServerError
             };
 
+            // The middleware logs the exception details for monitoring and debugging purposes.
             var problem = new ProblemDetails
             {
                 Status = status,

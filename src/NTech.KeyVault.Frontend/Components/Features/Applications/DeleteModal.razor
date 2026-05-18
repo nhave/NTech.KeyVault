@@ -1,0 +1,60 @@
+﻿@using NTech.KeyVault.ClientServices.Services
+
+<Modal @ref="modal" Title="Delete Application" OnHidden="OnModalHidden" UseStaticBackdrop="true">
+    <BodyTemplate>
+        <p class="text-danger fw-bold fst-italic">Are you sure you want to delete this application?<br>This action cannot be undone.</p>
+
+        <div class="row g-3">
+            <div class="col-12">
+                <label for="appNameInput" class="form-label">To delete this application, type its name: <b>@ApplicationName</b></label>
+                <TextInput @bind-Value="@nameInput" Id="appNameInput" Placeholder="Enter application name" />
+            </div>
+        </div>
+    </BodyTemplate>
+    <FooterTemplate>
+        <Button Color="ButtonColor.Danger" Type="ButtonType.Button" @onclick="ConfirmDeleteAsync" Disabled="@(!CanDelete)">
+            Delete
+        </Button>
+        <Button Color="ButtonColor.Secondary" Type="ButtonType.Button" @onclick="HideAsync">
+            Cancel
+        </Button>
+    </FooterTemplate>
+</Modal>
+
+@code {
+    [Inject] ApiService ApiService { get; set; } = default!;
+    [Inject] NavigationManager NavigationManager { get; set; } = default!;
+
+    [Parameter] public string ApplicationId { get; set; } = default!;
+    [Parameter] public string ApplicationName { get; set; } = default!;
+
+    private string nameInput = string.Empty;
+    
+    private bool CanDelete => nameInput == ApplicationName;
+
+    private Modal modal = default!;
+
+    private async Task OnModalHidden()
+    {
+        nameInput = string.Empty;
+    }
+
+    public async Task ConfirmDeleteAsync()
+    {
+        if (!CanDelete)
+            return;
+
+        if (await ApiService.DeleteApplicationAsync(Guid.Parse(ApplicationId), nameInput))
+            NavigationManager.NavigateTo("/applications", replace: true);
+    }
+
+    public async Task ShowAsync()
+    {
+        await modal.ShowAsync();
+    }
+
+    public async Task HideAsync()
+    {
+        await modal.HideAsync();
+    }
+}

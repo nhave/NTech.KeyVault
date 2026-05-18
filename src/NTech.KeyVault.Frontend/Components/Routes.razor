@@ -1,0 +1,13 @@
+﻿<CascadingAuthenticationState>
+    <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Features.Errors.NotFoundPage)">
+        <Found Context="routeData">
+            <CascadingValue Value="@ShouldHideNavbar(routeData)" Name="HideNavbar">
+                <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+                    <NotAuthorized>
+                        @RedirectToLogin()
+                    </NotAuthorized>
+                </AuthorizeRouteView>
+            </CascadingValue>
+        </Found>
+    </Router>
+</CascadingAuthenticationState>
