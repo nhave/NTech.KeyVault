@@ -18,7 +18,7 @@ namespace NTech.KeyVault.Api
             builder.AddServiceDefaults();
 
             // Add services to the container.
-
+            // Add services for authentication and authorization
             builder.Services.AddAntiforgery();
             builder.Services.AddAuthorization();
             builder.Services.AddAuthentication(options =>
@@ -44,9 +44,11 @@ namespace NTech.KeyVault.Api
                 };
             });
 
+            // Add services for controllers and HTTP context access
             builder.Services.AddControllers();
             builder.Services.AddHttpContextAccessor();
 
+            // Add services for database context
             builder.Services.AddDbContext<AppDbContext>();
 
             // Configure repositories and services

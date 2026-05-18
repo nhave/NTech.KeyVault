@@ -6,10 +6,43 @@ namespace NTech.KeyVault.Api.Services
 {
     public interface IAuthService
     {
+        /// <summary>
+        /// Authenticates a user asynchronously using the provided login request data.
+        /// </summary>
+        /// <param name="dto">The login request containing user credentials and any additional authentication information. Cannot be null.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a LoginResponse with
+        /// authentication details if the login is successful.</returns>
         public Task<LoginResponse> LoginAsync(LoginRequest dto);
+
+        /// <summary>
+        /// Asynchronously refreshes the authentication token using the specified refresh token request.
+        /// </summary>
+        /// <param name="dto">The refresh token request containing the necessary information to obtain a new authentication token. Cannot
+        /// be null.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="LoginResponse"/>
+        /// with the new authentication token and related information.</returns>
         public Task<LoginResponse> RefreshAsync(RefreshTokenRequest dto);
+
+        /// <summary>
+        /// Changes the user's password using the specified password change request.
+        /// </summary>
+        /// <param name="dto">An object containing the current and new password information required to perform the password change.
+        /// Cannot be null.</param>
+        /// <returns>A task that represents the asynchronous password change operation.</returns>
         public Task ChangePassword(PasswordChangeRequest dto);
+
+        /// <summary>
+        /// Initiates an asynchronous operation to change the user's email address based on the specified request.
+        /// </summary>
+        /// <param name="dto">An object containing the details required to process the email change request. Cannot be null.</param>
+        /// <returns>A task that represents the asynchronous email change operation.</returns>
         public Task ChangeEmail(EmailChangeRequest dto);
+
+        /// <summary>
+        /// Asynchronously retrieves information about the current authenticated user.
+        /// </summary>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="MeResponse"/>
+        /// object with details about the authenticated user.</returns>
         public Task<MeResponse> GetMeResponseAsync();
     }
 
@@ -32,7 +65,7 @@ namespace NTech.KeyVault.Api.Services
                 throw new Exception("Failed to fetch User information.");
 
             var activeMfaMethods = await mfaService.GetActiveMfaMethodsAsync(user.Id);
-            if (activeMfaMethods.Any())
+            if (activeMfaMethods.Count != 0)
             {
                 if (dto.MfaMethod == null && dto.MfaCode == null)
                 {
